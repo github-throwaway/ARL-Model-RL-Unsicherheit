@@ -15,3 +15,8 @@
 - Dynamik-Modell?
 - Weiterführende Links/Literatur/Hilfestellungen?
 
+### Links
+
+https://fairyonice.github.io/Create-a-neural-net-with-a-negative-log-likelihood-as-a-loss.html
+
+https://blog.tensorflow.org/2019/03/regression-with-probabilistic-layers-in.html
