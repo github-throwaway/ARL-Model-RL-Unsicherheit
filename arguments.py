@@ -10,7 +10,7 @@ def collect_arguments():
         return list(map(int, s.split()))
 
     parser = argparse.ArgumentParser(
-        description='Define the parameter for Captain Wurmi')
+        description='Define the parameters for the Project')
 
     # program arguments
     parser.add_argument("-e", "--episodes",     default=5e4,          type=int,      help="Define the number of episodes")

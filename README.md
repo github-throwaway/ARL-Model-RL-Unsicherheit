@@ -3,17 +3,23 @@
 Um OpenAI Baselines zu verwenden wird Tensorflow Version 1.13 benötigt
 
 > pip install tensorflow==1.13.2    
+> pip install stable-baselines3 
 
 Außerdem kann es unter Windows zu Problemen mit MPI kommen. Um diese zu umgehen, muss man den MPI Installer von der folgenden Seite downloaden und installieren:
 > https://www.microsoft.com/download/details.aspx?id=100593
 
 Falls LunarLander-v2 als Environment benutzt werden soll, müssen die folgenden Packages installiert werden:
-> conda install swig
->
+> conda install swig    
 > pip install box2d-py
+ 
+Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
+> git clone https://github.com/micheltokic/marioai.git  
+> cd marioai/gym-marioai    
+> pip install .     
+> (Den Punkt nicht vergessen!)
 
 
-### Fragen für Michael:
+### Fragen für Michel:
 
 - Was müssen wir genau abgeben? Code + Ausarbeitung? Welcher Umfang? Formale Vorgaben? Einladung zum Repo? Welche Sprache?
 - Welche Email? Michel.Tokic@lmu.de?
