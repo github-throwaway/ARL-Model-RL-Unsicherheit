@@ -17,5 +17,6 @@ def collect_arguments():
     parser.add_argument("-g", "--graphics",     default=False,          type=str2bool, help="Define if graphics should be shown")
     parser.add_argument("-a", "--algorithm",    default="ppo",         type=str,      help="Define the algorithm ppo | appo |a2c")
     parser.add_argument("-n", "--env_name",     default="LunarLander-v2",  type=str,      help="Define the environment")
+    parser.add_argument("-p", "--port",     default=8123,  type=int,      help="Define the port for mario server")
 
     return parser.parse_args()

@@ -13,10 +13,10 @@ args = arguments.collect_arguments()
 
 if args.env_name == 'Mario':
     # Start MarioServer in cmd
-    os.popen('java -jar marioai/gym-marioai/gym_marioai/server/marioai-server-0.1-jar-with-dependencies.jar')
+    os.popen('java -jar marioai/gym-marioai/gym_marioai/server/marioai-server-0.1-jar-with-dependencies.jar -p {}'.format(args.port))
     # Setup Mario Env
     reward_settings = gym_marioai.RewardSettings(dead=-10000, timestep=0)
-    env = gym.make('Marioai-v1', render=True,
+    env = gym.make('Marioai-v1', port=args.port, render=True,
                    reward_settings=reward_settings,
                    level_path=levels.cliff_level,
                    # compact_observation=True,
