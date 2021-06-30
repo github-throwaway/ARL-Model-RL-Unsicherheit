@@ -13,7 +13,9 @@ args = arguments.collect_arguments()
 
 if args.env_name == 'Mario':
     # Start MarioServer in cmd
-    os.popen('java -jar marioai/gym-marioai/gym_marioai/server/marioai-server-0.1-jar-with-dependencies.jar -p {}'.format(args.port))
+    os.popen(
+        'java -jar marioai/gym-marioai/gym_marioai/server/marioai-server-0.1-jar-with-dependencies.jar -p {}'.format(
+            args.port))
     # Setup Mario Env
     reward_settings = gym_marioai.RewardSettings(dead=-10000, timestep=0)
     env = gym.make('Marioai-v1', port=args.port, render=True,
@@ -30,7 +32,7 @@ if args.env_name == 'Mario':
         total_reward = 0
 
         while not done:
-            a = env.JUMP_RIGHT if random.randint(0,1) % 2 == 0 else env.SPEED_RIGHT
+            a = env.JUMP_RIGHT if random.randint(0, 1) % 2 == 0 else env.SPEED_RIGHT
             s, r, done, info = env.step(a)
             total_reward += r
 
@@ -40,7 +42,8 @@ if args.env_name == 'Mario':
     exit()
 
 elif args.env_name == "MyCartPole":
-    env = make_vec_env()
+    # TODO Implement MyCartPole
+    env = make_vec_env("MyCartPole")
 else:
     env = make_vec_env(args.env_name, n_envs=4)
 save_model = "target/{}_{}".format(args.algorithm, args.env_name)
