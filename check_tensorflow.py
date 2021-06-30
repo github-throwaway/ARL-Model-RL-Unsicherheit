@@ -7,8 +7,9 @@ import os, sys
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 config = tf.compat.v1.ConfigProto()
-#config.gpu_options.per_process_gpu_memory_fraction = 0.95
-#config.gpu_options.visible_device_list = "1"
+if tf.test.is_gpu_available():
+    config.gpu_options.per_process_gpu_memory_fraction = 0.95
+    config.gpu_options.visible_device_list = "1"
 tf.compat.v1.Session(config=config)
 
 
