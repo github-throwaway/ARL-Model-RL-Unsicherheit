@@ -22,11 +22,18 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 ### Fragen für Michel:
 
 - Was müssen wir genau abgeben? Code + Ausarbeitung? Welcher Umfang? Formale Vorgaben? Einladung zum Repo? Welche Sprache?
+-> Abgabe bestehend aus Vortrag und Ausarbeitung (~10 Seiten), sowie Code.
+
 - Welche Email? Michel.Tokic@lmu.de?
+-> Am besten über Moodle
+
 - Aufgabenstellung konkretisieren
+-> 
+
 - Big Picture nochmal erklären. Wie hängen RL-Policy und probabilistische Neuronales Netzwerke zusammen? 
 - Welche Daten sollen verauscht werden?
 - Welche Environment? Carpole oder Mario?
+-> Mit CartPole starten, dann auf Mario umbiegen
 - Was meint er mit kapseln?
 - Was ist mit Ein-Schritt-Dynamik gemeint? 
 - aleatorischer vs epistemischer Unsicherheit?
