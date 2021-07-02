@@ -1,5 +1,6 @@
 # ARL-Model-RL-Unsicherheit
 
+## Setup
 Um OpenAI Baselines zu verwenden wird Tensorflow Version 1.13 benötigt
 
 > pip install tensorflow==1.13.2    
@@ -38,10 +39,10 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
      2. ...    
 
 ## TODO
-[ ] Framework entwickeln
-[ ] Framework mit CartPole testen
-[ ] Framework auf Mario anwenden
-[ ] Was meint er mit kapseln?
+- [ ] Framework entwickeln
+- [ ] Framework mit CartPole testen
+- [ ] Framework auf Mario anwenden
+- [ ] Was meint er mit kapseln?
 
 ## Begriffsdefinitionen
 - Ein-Schritt-Dynamik
