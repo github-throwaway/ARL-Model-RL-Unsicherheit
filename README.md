@@ -22,10 +22,11 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 ### Fragen für Michel:
 
 - Was müssen wir genau abgeben? Code + Ausarbeitung? Welcher Umfang? Formale Vorgaben? Einladung zum Repo? Welche Sprache?
--> Abgabe bestehend aus Vortrag und Ausarbeitung (~10 Seiten), sowie Code.
+-> Abgabe bestehend aus Vortrag und Ausarbeitung (~10 Seiten), sowie Codeo und Video (evtl. auch Jupyter  Notebook für Übung).
 
 - Welche Email? Michel.Tokic@lmu.de?
 -> Am besten über Moodle
+-> Github: micheltokic
 
 - Aufgabenstellung konkretisieren
 -> 
@@ -46,3 +47,5 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 https://fairyonice.github.io/Create-a-neural-net-with-a-negative-log-likelihood-as-a-loss.html
 
 https://blog.tensorflow.org/2019/03/regression-with-probabilistic-layers-in.html
+
+
