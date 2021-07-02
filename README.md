@@ -19,33 +19,38 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 > (Den Punkt nicht vergessen!)
 
 
-### Fragen für Michel:
+## Organisatorisches
 
 - Was müssen wir genau abgeben? Code + Ausarbeitung? Welcher Umfang? Formale Vorgaben? Einladung zum Repo? Welche Sprache?
--> Abgabe bestehend aus Vortrag und Ausarbeitung (~10 Seiten), sowie Codeo und Video (evtl. auch Jupyter  Notebook für Übung).
-
+    - Abgabe bestehend aus Vortrag, Video und Ausarbeitung (~10 Seiten)
+    - Repository
+    - Evtl. auch Jupyter  Notebook für Übung).
 - Welche Email? Michel.Tokic@lmu.de?
--> Am besten über Moodle
--> Github: micheltokic
+- Am besten über Moodle
+    - Github: micheltokic
+    - Aufgabenstellung konkretisieren
 
-- Aufgabenstellung konkretisieren
--> 
+## Aufgabenstellung
+- Idee: Trainieren eines Agenten basierend auf einer Environment die partiell unsicher ist (z.B. mithilfe von verrauschten Daten), so dass der Agent unsicheren Zuständen gezielt vermeidet
+- Ziel: Framework für RL mit Unsicherheit -> Sollte dann für verschiedene Gyms funktionieren (z.B. CartPole, LunarLander, Mario)
+ - Aufgabenschritte:
+     1. Environment kapseln, so dass Unsicherheit für bestimmte Bereiche gegeben werden kann (z.B. verrauschte Daten -> wir müssen das herausfinden oder ein Programm schreiben, dass das für uns herausfindet ^^)
+     2. ...    
 
-- Big Picture nochmal erklären. Wie hängen RL-Policy und probabilistische Neuronales Netzwerke zusammen? 
-- Welche Daten sollen verauscht werden?
-- Welche Environment? Carpole oder Mario?
--> Mit CartPole starten, dann auf Mario umbiegen
-- Was meint er mit kapseln?
-- Was ist mit Ein-Schritt-Dynamik gemeint? 
-- aleatorischer vs epistemischer Unsicherheit?
-- Ensemble-Modellierung?
-- Dynamik-Modell?
-- Weiterführende Links/Literatur/Hilfestellungen?
+## TODO
+[ ] Framework entwickeln
+[ ] Framework mit CartPole testen
+[ ] Framework auf Mario anwenden
+[ ] Was meint er mit kapseln?
+
+## Begriffsdefinitionen
+- Ein-Schritt-Dynamik
+- Aleatorische und epistemische Unsicherheit
+- Ensemble-Modellierung
+- Dynamik-Modell
 
 ### Links
-
-https://fairyonice.github.io/Create-a-neural-net-with-a-negative-log-likelihood-as-a-loss.html
-
-https://blog.tensorflow.org/2019/03/regression-with-probabilistic-layers-in.html
+- [Neural Net with negative log likelihood as a loss](https://fairyonice.github.io/Create-a-neural-net-with-a-negative-log-likelihood-as-a-loss.html)
+- [Regression with probabilisitic layers](https://blog.tensorflow.org/2019/03/regression-with-probabilistic-layers-in.html)
 
 
