@@ -38,11 +38,13 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
      1. Environment kapseln, so dass Unsicherheit für bestimmte Bereiche gegeben werden kann (z.B. verrauschte Daten -> wir müssen das herausfinden oder ein Programm schreiben, dass das für uns herausfindet ^^)
      2. ...    
 
+## Fragen
+- Was wäre eine günstige Abbruchbedingung für den Upswing Cartpole? Aktuell nur wenn außerhalb des Frames
+
 ## TODO
 - [ ] Framework entwickeln
 - [ ] Framework mit CartPole testen
 - [ ] Framework auf Mario anwenden
-- [ ] Was meint er mit kapseln?
 
 ## Begriffsdefinitionen
 - **Ein-Schritt-Dynamik:** Ich befinde mich in einem Markov-Zustand und führe eine Aktion aus. In welchem Zustand befinde ich mich danach? Diese Frage wird an das Dynamik-Modell gestellt.
