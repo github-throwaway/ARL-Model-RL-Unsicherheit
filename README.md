@@ -41,7 +41,7 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 ## Fragen
 - Was wäre eine günstige Abbruchbedingung für den Upswing Cartpole? Aktuell nur wenn außerhalb des Frames
 - Gibt es neuronale Netzwerke die nicht probabilistisch sind?
-- Wie samplen wir den gesamten Zustandraum?
+- Wie samplen wir den gesamten Zustandraum und mit welchem RL-Algorithmus (PPO oder zufällig)?
 
 ## TODO
 - [ ] Framework entwickeln
