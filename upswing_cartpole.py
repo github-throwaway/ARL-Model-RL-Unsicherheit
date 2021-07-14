@@ -56,9 +56,9 @@ if __name__ == "__main__":
     for _ in range(1000):
         env.render()
         action, _states = model.predict(observation)
-        observation, fake_observation, reward, done, info,_ = env.step(action)
-        print(f"original: {observation[2]} - fake: {fake_observation} - "
-              f"diff: {observation[2]-fake_observation}")
+        observation, reward, done, info = env.step(action)
+        print(f"original: {observation[2]} - fake: {observation[4]} - "
+              f"diff: {observation[2]-observation[4]}")
         print()
 
         if done:
