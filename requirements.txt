@@ -3,3 +3,5 @@ tensorflow
 pandas
 matplotlib
 numpy
+stable-baselines3
+git+git://github.com/micheltokic/marioai/#subdirectory=gym-marioai
