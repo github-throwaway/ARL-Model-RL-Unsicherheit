@@ -2,6 +2,8 @@ import math
 import numpy as np
 from random import uniform
 from gym.envs.classic_control.cartpole import CartPoleEnv
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
 
 
 class UpswingCartPoleEnv(CartPoleEnv):
@@ -9,7 +11,7 @@ class UpswingCartPoleEnv(CartPoleEnv):
     TODO: eventually replace with env mentioned by mr. tokic
     """
 
-    def __init__(self, offset, min_range, max_range):
+    def __init__(self, offset=2, min_range=-10, max_range=10):
         super().__init__()
         self.theta_threshold_radians = math.inf
         self.min_range = min_range
@@ -19,15 +21,18 @@ class UpswingCartPoleEnv(CartPoleEnv):
     def step(self, action):
         observation, reward, done, info = super().step(action)
         pole_angle = self.state[2]
+        # todo: should we also implement uncertainty for a region of the
+        #  track?
 
         if pole_angle > self.min_range and pole_angle < self.max_range:
-            fake_observation = pole_angle + uniform(-1 * self.offset, self.offset)
+            np.append(observation,pole_angle + uniform(-1 * self.offset,
+                                                  self.offset))
             info["uncertain"] = True
         else:
-            fake_observation = pole_angle
+            np.append(observation,pole_angle)
             info["uncertain"] = False
 
-        return observation, fake_observation, reward, done, info
+        return observation, reward, done, info
 
     def reset(self):
         """This cart pole should start facing downwards. So we need to add pi to the initial pole position (rad) """
@@ -38,13 +43,20 @@ class UpswingCartPoleEnv(CartPoleEnv):
 
 
 if __name__ == "__main__":
-    env = UpswingCartPoleEnv(offset=2, min_range=-10, max_range=10)
+    env = UpswingCartPoleEnv()
+    env = make_vec_env(type(env), n_envs=4)
+
+    model = PPO("MlpPolicy", env, verbose=1)
+    model.learn(total_timesteps=2500)
+    model.save("save_model")
+    del model  # remove to demonstrate saving and loading
+    model = PPO.load("save_model")
 
     observation = env.reset()
     for _ in range(1000):
         env.render()
-        action = (env.action_space.sample())
-        observation, fake_observation, reward, done, info = env.step(action)
+        action, _states = model.predict(observation)
+        observation, fake_observation, reward, done, info,_ = env.step(action)
         print(f"original: {observation[2]} - fake: {fake_observation} - "
               f"diff: {observation[2]-fake_observation}")
         print()
