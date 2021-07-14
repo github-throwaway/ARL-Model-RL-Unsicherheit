@@ -38,14 +38,12 @@ class UpswingCartPoleEnv(CartPoleEnv):
 
 
 if __name__ == "__main__":
-    env = UpswingCartPoleEnv(2, -10, 10)
+    env = UpswingCartPoleEnv(offset=2, min_range=-10, max_range=10)
 
     observation = env.reset()
     for _ in range(1000):
         env.render()
-        action = (
-            env.action_space.sample()
-        )  # your agent here (this takes random actions)
+        action = (env.action_space.sample())
         observation, fake_observation, reward, done, info = env.step(action)
         print(f"original: {observation[2]} - fake: {fake_observation} - "
               f"diff: {observation[2]-fake_observation}")
