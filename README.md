@@ -39,9 +39,9 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
      2. ...    
 
 ## Fragen
-- Was wäre eine günstige Abbruchbedingung für den Upswing Cartpole? Aktuell nur wenn außerhalb des Frames
-- Gibt es neuronale Netzwerke die nicht probabilistisch sind?
-- Wie samplen wir den gesamten Zustandraum und mit welchem RL-Algorithmus (PPO oder zufällig)?
+- Was wäre eine günstige Abbruchbedingung für den Upswing Cartpole? Aktuell nur wenn außerhalb des Frames -> Eigentlich ist es ein kontinuerlihes Lernproblem, im echten Beispiel verbietet der Controller weitere Bewegungen zum Ende des Tracks. Also es passt wie es aktuell ist. 
+- Gibt es neuronale Netzwerke die nicht probabilistisch sind? Ja,  die ganzen klassischen, zb. MLP.
+- Wie samplen wir den gesamten Zustandraum und mit welchem RL-Algorithmus (PPO oder zufällig)? **Wir sollen den Startzustand auch samplen!**
 
 ## TODO
 - [ ] Framework entwickeln
