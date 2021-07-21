@@ -5,3 +5,4 @@ matplotlib
 numpy
 stable-baselines3
 git+git://github.com/micheltokic/marioai/#subdirectory=gym-marioai
+git+git://github.com/angelolovatto/gym-cartpole-swingup
