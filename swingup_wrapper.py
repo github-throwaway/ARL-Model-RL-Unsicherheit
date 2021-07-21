@@ -1,11 +1,10 @@
 # coding: utf-8
 import math
+from collections import namedtuple
 from random import uniform
 
-import gym
-import gym_cartpole_swingup
-from stable_baselines3 import PPO
-from stable_baselines3.common.env_util import make_vec_env
+import numpy as np
+from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpEnv
 
 
 class SwingUpWrapper():
@@ -17,32 +16,39 @@ class SwingUpWrapper():
         self.min_range = min_range
         self.max_range = max_range
         self.offset = offset
-        self.org_env = gym.make("CartPoleSwingUp-v0")
+        self.org_env = CartPoleSwingUpEnv()
 
-    def reset(self):
-        return self.org_env.reset()
+    def random_start(self):
+        self.org_env.reset()
+        state = self.org_env.state
+        State = namedtuple("State", "x_pos x_dot theta theta_dot")
+        random_theta = np.random.uniform(0.0,2.0*np.pi)
+        self.org_env.state = State(state.x_pos,state.x_dot,random_theta,state.theta_dot)
 
     def step(self,action):
         # observation = [x_pos, x_dot, np.cos(theta),np.sin(theta),theta_dot]
         observation, reward, done, info = self.org_env.step(action)
         pole_angle = math.atan(observation[3]/observation[2])
 
+        my_obs = list(observation)
         if pole_angle > self.min_range and pole_angle < self.max_range:
             fake_observation = pole_angle + uniform(-self.offset,self.offset)
-            observation[4] = fake_observation
+            my_obs.append(fake_observation)
             info["uncertain"] = True
         else:
-            observation[4] = pole_angle
+            my_obs.append(pole_angle)
             info["uncertain"] = False
 
-        return observation, reward, done, info
+        return my_obs, reward, done, info
 
 if __name__ == "__main__":
     env = SwingUpWrapper()
     done = False
-    env.reset()
+    env.random_start()
 
     while not done:
         action = env.org_env.action_space.sample()
         obs, rew, done, info = env.step(action)
+        print(obs)
+        print(info)
         env.org_env.render()
