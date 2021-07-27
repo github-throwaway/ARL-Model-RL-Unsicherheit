@@ -5,6 +5,7 @@ __pycache__/
 *.zip
 target/
 marioai/
+gym-cartpole-swingup/
 
 # C extensions
 *.so
