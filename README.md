@@ -44,6 +44,10 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 - Wie samplen wir den gesamten Zustandraum und mit welchem RL-Algorithmus (PPO oder zufällig)? **Wir sollen den Startzustand auch samplen!**
 
 ## TODO
+- [ ] `setup.py` via setuptools einrichten um Installation zu vereinfachen
+- [ ] Package erstellen
+- [ ] README Installationsschritte updaten
+-----------
 - [ ] Framework entwickeln
 - [ ] Framework mit CartPole testen
 - [ ] Framework auf Mario anwenden
