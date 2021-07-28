@@ -1,5 +1,6 @@
 # coding: utf-8
 import math
+import pandas as pd
 from collections import namedtuple
 from random import uniform
 
@@ -28,6 +29,7 @@ class SwingUpWrapper(gym.Env):
         random_theta = np.random.uniform(0.0, 2.0 * np.pi)
         self.org_env.state = State(state[0], state[1], random_theta, state[4])
         return self.org_env.state
+
     # todo track position auch zufällig?
 
     def step(self, action):
@@ -41,7 +43,7 @@ class SwingUpWrapper(gym.Env):
             # todo: verrauschten winkel & Winkelgeschwindigkeit ersetzen
             # differenz zwischen winkel von winkelgeschwindigkeit abziehen
             # nur zurück liefern, nicht im original env verändern!
-            fake_angular_velocity = observation[4]-(pole_angle - fake_observation)
+            fake_angular_velocity = observation[4] - (pole_angle - fake_observation)
             my_obs.append(fake_observation)
 
             reward = 1 - abs(observation[0]) + np.cos(fake_observation)
@@ -58,14 +60,31 @@ class SwingUpWrapper(gym.Env):
         return my_obs, reward, done, info
 
 
+
+
 if __name__ == "__main__":
     env = SwingUpWrapper()
     done = False
     state = env.reset()
+    observations_list = []
+    observations = []
 
     while not done:
         action = env.org_env.action_space.sample()
         obs, rew, done, info = env.step(action)
+        if len(observations) >= 5:
+            observations.pop(0)
+        observations.append(obs)
         print(obs)
         print(info)
         env.org_env.render()
+        observations_list.append(observations.copy())
+
+    #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta']
+    df = pd.DataFrame(observations_list)
+    df.to_csv("observations.csv")
+
+    #csv_obs = pd.read_csv('observations.csv')
+    #print(csv_obs)
+    #print("CSV An Stelle 12: ", csv_obs.values[12])
+    # csv_obs.values[12][0] returns the index 12, so start with 1
