@@ -21,8 +21,6 @@ if args.env_name == 'Mario':
     env = gym.make('Marioai-v1', port=args.port, render=True,
                    reward_settings=reward_settings,
                    level_path=levels.cliff_level,
-                   # compact_observation=True,
-                   # trace_length=3,
                    rf_width=7, rf_height=5
                    )
     # Start Visualization of Demo

@@ -44,7 +44,9 @@ class SwingUpWrapper(gym.Env):
             fake_angular_velocity = observation[4]-(pole_angle - fake_observation)
             my_obs.append(fake_observation)
 
-            reward = 1 - abs(observation[0]) + np.cos(fake_observation)
+
+            #reward = 1 - abs(observation[0]) + np.cos(fake_observation)
+            #reward= -abs(observation[0]*observation[0]) + (observation[2]-1)-abs(observation[4])
             info["uncertain"] = True
         else:
             my_obs.append(pole_angle)
@@ -52,7 +54,9 @@ class SwingUpWrapper(gym.Env):
 
             # todo: Reward = cos(theta_noise, x_pos)
             # Reward == Hypotenuse
-            reward = 1 - abs(observation[0]) + np.cos(pole_angle)
+           # reward = 1 - abs(observation[0]) + np.cos(pole_angle)
+
+            #reward = -abs(observation[0]*observation[0]) + (observation[2]-1)-abs(observation[4])
             # siehe python notebook aus übung
 
         return my_obs, reward, done, info
