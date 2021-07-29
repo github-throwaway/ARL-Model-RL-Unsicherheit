@@ -43,9 +43,9 @@ if __name__ == "__main__":
     #print("CSV An Stelle 12: ", csv_obs.values[12])
     # csv_obs.values[12][0] returns the index 12, so start with 1
     csv_obs = pd.read_csv('observations.csv')
-    my_data = genfromtxt('observations1.csv', delimiter=',').astype(np.float32)
+    my_data = genfromtxt('observations.csv', delimiter=',').astype(np.float32)
 
-    data1, data2= np.hsplit(my_data, [35])
+    data1, data2 = np.hsplit(my_data, [35])
 
     neuralNetworkSimple()
 
