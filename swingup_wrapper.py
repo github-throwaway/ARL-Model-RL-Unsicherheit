@@ -61,7 +61,7 @@ class SwingUpWrapper(gym.Env):
 
             #reward = 1 - abs(observation[0]) + np.cos(fake_observation)
             reward = -abs(observation[0]) + (observation[2]-1)
-            my_obs.append(reward)
+            #my_obs.append(reward)
             info["uncertain"] = True
         else:
             my_obs.append(pole_angle)
@@ -72,7 +72,7 @@ class SwingUpWrapper(gym.Env):
            # reward = 1 - abs(observation[0]) + np.cos(pole_angle)
 
             reward = -abs(observation[0]) + (observation[2]-1)
-            my_obs.append(reward)
+           # my_obs.append(reward)
             # siehe python notebook aus übung
 
         return my_obs, reward, done, info
@@ -86,21 +86,28 @@ if __name__ == "__main__":
     state = env.reset()
     observations_list = []
     observations = []
+    numberOfValuesPerObservation = 2
+    numberOfTimeSteps = 5
+
 
     while not done:
         action = env.org_env.action_space.sample()
         obs, rew, done, info = env.step(action)
-        if len(observations) >= 5:
+        #observations.append(obs)
+        observations.append(obs[0])
+        observations.append(obs[len(obs)-1])
+        if len(observations) > numberOfValuesPerObservation*numberOfTimeSteps:
             observations.pop(0)
-        observations.append(obs)
+            observations.pop(1)
+            observations_list.append(observations.copy())
         print(obs)
         print(info)
         env.org_env.render()
-        observations_list.append(observations.copy())
 
-    #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta']
+    #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
     df = pd.DataFrame(observations_list)
-    df.to_csv("observations.csv")
+    df.to_csv("observations.csv", index=None, header=None)
+
 
     # csv_obs = pd.read_csv('observations.csv')
     # #print(csv_obs)
