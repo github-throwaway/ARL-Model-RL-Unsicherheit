@@ -3,9 +3,21 @@ import math
 import pandas as pd
 from collections import namedtuple
 from random import uniform
-
+from numpy import genfromtxt
 import gym
 import numpy as np
+
+
+import tensorflow as tf
+keras = tf.keras
+K = keras.backend
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras import optimizers
+KL = keras.optimizers
+import tensorflow_probability as tfp
+tfd = tfp.distributions
+
+
 from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpEnv, CartPoleSwingUpV1, CartPoleSwingUpV0
 
 
@@ -48,7 +60,8 @@ class SwingUpWrapper(gym.Env):
 
 
             #reward = 1 - abs(observation[0]) + np.cos(fake_observation)
-            #reward= -abs(observation[0]*observation[0]) + (observation[2]-1)-abs(observation[4])
+            reward = -abs(observation[0]) + (observation[2]-1)
+            my_obs.append(reward)
             info["uncertain"] = True
         else:
             my_obs.append(pole_angle)
@@ -58,7 +71,8 @@ class SwingUpWrapper(gym.Env):
             # Reward == Hypotenuse
            # reward = 1 - abs(observation[0]) + np.cos(pole_angle)
 
-            #reward = -abs(observation[0]*observation[0]) + (observation[2]-1)-abs(observation[4])
+            reward = -abs(observation[0]) + (observation[2]-1)
+            my_obs.append(reward)
             # siehe python notebook aus übung
 
         return my_obs, reward, done, info
@@ -88,7 +102,29 @@ if __name__ == "__main__":
     df = pd.DataFrame(observations_list)
     df.to_csv("observations.csv")
 
-    #csv_obs = pd.read_csv('observations.csv')
+    csv_obs = pd.read_csv('observations.csv')
     #print(csv_obs)
     #print("CSV An Stelle 12: ", csv_obs.values[12])
     # csv_obs.values[12][0] returns the index 12, so start with 1
+    my_data = genfromtxt('observations1.csv', delimiter=',').astype(np.float32)
+    #data1=my_data[35, :].copy()
+    #print(data1)
+    data1, data2= np.hsplit(my_data, [35])
+    #print(data2)
+    negloglik = lambda y, p_y: -p_y.log_prob(y)
+
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(1),
+        tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
+    ])
+
+    # Do inference.
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
+    model.fit(data1, data2, epochs=500, verbose=False)
+
+
+    x_tst=tf.expand_dims(data1[1,:],0)
+    # Make predictions.
+    yhat = model(x_tst)
+    print(yhat.mean())
+
