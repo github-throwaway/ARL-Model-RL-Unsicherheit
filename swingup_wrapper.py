@@ -102,29 +102,29 @@ if __name__ == "__main__":
     df = pd.DataFrame(observations_list)
     df.to_csv("observations.csv")
 
-    csv_obs = pd.read_csv('observations.csv')
-    #print(csv_obs)
-    #print("CSV An Stelle 12: ", csv_obs.values[12])
-    # csv_obs.values[12][0] returns the index 12, so start with 1
-    my_data = genfromtxt('observations1.csv', delimiter=',').astype(np.float32)
-    #data1=my_data[35, :].copy()
-    #print(data1)
-    data1, data2= np.hsplit(my_data, [35])
-    #print(data2)
-    negloglik = lambda y, p_y: -p_y.log_prob(y)
-
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(1),
-        tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
-    ])
-
-    # Do inference.
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
-    model.fit(data1, data2, epochs=500, verbose=False)
-
-
-    x_tst=tf.expand_dims(data1[1,:],0)
-    # Make predictions.
-    yhat = model(x_tst)
-    print(yhat.mean())
+    # csv_obs = pd.read_csv('observations.csv')
+    # #print(csv_obs)
+    # #print("CSV An Stelle 12: ", csv_obs.values[12])
+    # # csv_obs.values[12][0] returns the index 12, so start with 1
+    # my_data = genfromtxt('observations1.csv', delimiter=',').astype(np.float32)
+    # #data1=my_data[35, :].copy()
+    # #print(data1)
+    # data1, data2= np.hsplit(my_data, [35])
+    # #print(data2)
+    # negloglik = lambda y, p_y: -p_y.log_prob(y)
+    #
+    # model = tf.keras.Sequential([
+    #     tf.keras.layers.Dense(1),
+    #     tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
+    # ])
+    #
+    # # Do inference.
+    # model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
+    # model.fit(data1, data2, epochs=500, verbose=False)
+    #
+    #
+    # x_tst=tf.expand_dims(data1[1,:],0)
+    # # Make predictions.
+    # yhat = model(x_tst)
+    # print(yhat.mean())
 
