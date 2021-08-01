@@ -8,8 +8,10 @@ import numpy as np
 
 
 import tensorflow as tf
+#import tensorflow.keras.backend as K
 keras = tf.keras
 K = keras.backend
+
 from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras import optimizers
 KL = keras.optimizers
@@ -32,9 +34,69 @@ def neuralNetworkSimple():
     model.fit(data1, data2, epochs=500, verbose=False)
 
     x_tst = tf.expand_dims(data1[1, :], 0)
+    #print(x_tst)
+    #print(K.eval(x_tst))
     # Make predictions.
+
+    #print(model.get_weights())
+    #print("------")
+    #print(model.get_weights()[0])
+    #print(model.get_weights()[1])
     yhat = model(x_tst)
-    print(yhat.mean())
+    print(K.eval(yhat.mean()))
+    #print("------")
+    #assert isinstance(yhat, tfd.Distribution)
+    #test_mult=tf.math.multiply(tf.transpose(x_tst),model.weights[0])
+    #print(K.eval(test_mult))
+
+def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
+    n = kernel_size + bias_size
+    c = np.log(np.expm1(1.))
+    return tf.keras.Sequential([
+        tfp.layers.VariableLayer(2 * n, dtype=dtype),
+        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+            tfd.Normal(loc=t[..., :n],
+                        scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+            reinterpreted_batch_ndims=1)),
+    ])
+
+def prior_trainable(kernel_size, bias_size=0, dtype=None):
+    n = kernel_size + bias_size
+    return tf.keras.Sequential([
+        tfp.layers.VariableLayer(n, dtype=dtype),
+        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+            tfd.Normal(loc=t, scale=1),
+            reinterpreted_batch_ndims=1)),
+    ])
+
+def neuralNetworkExpanded():
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(1),
+        tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
+    ])
+
+    # Do inference.
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
+    model.fit(data1, data2, epochs=500, verbose=False)
+
+    x_tst = tf.expand_dims(data1[1, :], 0)
+    # print(x_tst)
+    # print(K.eval(x_tst))
+    # Make predictions.
+
+    # print(model.get_weights())
+    # print("------")
+    # print(model.get_weights()[0])
+    # print(model.get_weights()[1])
+    yhat = model(x_tst)
+    print(K.eval(yhat.mean()))
+    # print("------")
+    # assert isinstance(yhat, tfd.Distribution)
+    # test_mult=tf.math.multiply(tf.transpose(x_tst),model.weights[0])
+    # print(K.eval(test_mult))
+
+
+
 
 
 if __name__ == "__main__":
@@ -45,7 +107,9 @@ if __name__ == "__main__":
     csv_obs = pd.read_csv('observations.csv')
     my_data = genfromtxt('observations.csv', delimiter=',').astype(np.float32)
 
-    data1, data2 = np.hsplit(my_data, [35])
+    data1, data2 = np.hsplit(my_data, [9])
+    #print(data1)
+    #print(data2)
 
     neuralNetworkSimple()
 

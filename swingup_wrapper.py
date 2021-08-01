@@ -33,7 +33,10 @@ class SwingUpWrapper(gym.Env):
         self.offset = offset
         self.org_env = CartPoleSwingUpV0()
         self.action_space = gym.Env.action_space
+        print("space", self.action_space)
+        print("org space", gym.Env.action_space)
         self.observation_space = gym.Env.observation_space
+        print("observation space", self.observation_space)
 
     def reset(self):
         state = self.org_env.reset()
@@ -92,6 +95,8 @@ if __name__ == "__main__":
 
     while not done:
         action = env.org_env.action_space.sample()
+        print("space lower", env.org_env.action_space)
+        print("current action", action)
         obs, rew, done, info = env.step(action)
         #observations.append(obs)
         observations.append(obs[0])
@@ -102,6 +107,7 @@ if __name__ == "__main__":
             observations_list.append(observations.copy())
         print(obs)
         print(info)
+       # print("space", action_space)
         env.org_env.render()
 
     #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
