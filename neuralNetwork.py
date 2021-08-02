@@ -32,6 +32,7 @@ negloglik = lambda y, p_y: -p_y.log_prob(y)
 
 
 def neuralNetworkSimple():
+    #No Uncertainty
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(1),
         tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
@@ -52,6 +53,38 @@ def neuralNetworkSimple():
     #print(model.get_weights()[1])
     yhat = model(x_tst)
     print(K.eval(yhat.mean()))
+    print(K.eval(yhat.variance()))
+    #print("------")
+    #assert isinstance(yhat, tfd.Distribution)
+    #test_mult=tf.math.multiply(tf.transpose(x_tst),model.weights[0])
+    #print(K.eval(test_mult))
+
+
+def neuralNetworkStandardDev():
+    #Aleatoric Uncertainty
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(1 + 1),
+        tfp.layers.DistributionLambda(
+            lambda t: tfd.Normal(loc=t[..., :1],
+                                 scale=1e-3 + tf.math.softplus(0.05 * t[..., 1:]))),
+    ])
+
+    # Do inference.
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
+    model.fit(data1, data2, epochs=500, verbose=False)
+
+    x_tst = tf.expand_dims(data1[1, :], 0)
+    #print(x_tst)
+    #print(K.eval(x_tst))
+    # Make predictions.
+
+    #print(model.get_weights())
+    #print("------")
+    #print(model.get_weights()[0])
+    #print(model.get_weights()[1])
+    yhat = model(x_tst)
+    print(K.eval(yhat.mean()))
+    print(K.eval(yhat.variance()))
     #print("------")
     #assert isinstance(yhat, tfd.Distribution)
     #test_mult=tf.math.multiply(tf.transpose(x_tst),model.weights[0])
@@ -78,6 +111,7 @@ def prior_trainable(kernel_size, bias_size=0, dtype=None):
     ])
 
 def neuralNetworkExpanded():
+    # Epistemic Uncertainty
     model = tf.keras.Sequential([
         tf.layers.DenseVariational(1, posterior_mean_field, prior_trainable, kl_weight=1 / data1.shape[0]),
         tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
@@ -202,6 +236,7 @@ if __name__ == "__main__":
     #print(data2)
 
     neuralNetworkSimple()
+    neuralNetworkStandardDev()
 
     #denseVar= DenseVariational(1, posterior_mean_field, prior_trainable, kl_weight=1 / data1.shape[0]), tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1))
     #neuralNetworkExpanded()
