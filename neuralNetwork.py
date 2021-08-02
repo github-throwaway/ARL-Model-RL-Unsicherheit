@@ -1,4 +1,6 @@
 import math
+import statistics
+
 import pandas as pd
 from collections import namedtuple
 from random import uniform
@@ -8,7 +10,6 @@ import numpy as np
 
 
 # import tensorflow as tf
-# todo for expanded
 import tensorflow.compat.v1 as tf
 
 keras = tf.keras
@@ -22,7 +23,7 @@ KD = keras.Sequential
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 
-#todo for expanded
+
 from tensorflow_probability.python.layers.dense_variational_v2 import _make_kl_divergence_penalty, DenseVariational
 
 
@@ -44,7 +45,7 @@ def neuralNetworkSimple():
 
     x_tst = tf.expand_dims(data1[1, :], 0)
     #print(x_tst)
-    #print(K.eval(x_tst))
+    print(K.eval(x_tst))
     # Make predictions.
 
     #print(model.get_weights())
@@ -121,7 +122,7 @@ def neuralNetworkExpanded():
     model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
     model.fit(data1, data2, epochs=500, verbose=False)
 
-    x_tst = tf.expand_dims(data1[1, :], 0)
+    #x_tst = tf.expand_dims(data1[1, :], 0)
     # print(x_tst)
     # print(K.eval(x_tst))
     # Make predictions.
@@ -130,13 +131,77 @@ def neuralNetworkExpanded():
     # print("------")
     # print(model.get_weights()[0])
     # print(model.get_weights()[1])
-    yhat = model(x_tst)
-    print(K.eval(yhat.mean()))
-    print(K.eval(yhat.variance()))
+    #yhat = model(x_tst)
+    #print(K.eval(yhat.mean()))
+    #print(K.eval(yhat.variance()))
     # print("------")
     # assert isinstance(yhat, tfd.Distribution)
     # test_mult=tf.math.multiply(tf.transpose(x_tst),model.weights[0])
     # print(K.eval(test_mult))
+
+    [print(np.squeeze(w.numpy())) for w in model.weights];
+    yhat = model(x_tst)
+    assert isinstance(yhat, tfd.Distribution)
+
+def neuralNetworkExpanded2():
+    # Epistemic Uncertainty
+    model = tf.keras.Sequential([
+        tfp.layers.DenseVariational(1 + 1, posterior_mean_field, prior_trainable, kl_weight=1 / data1.shape[0]),
+        tfp.layers.DistributionLambda(
+            lambda t: tfd.Normal(loc=t[..., :1],
+                                 scale=1e-3 + tf.math.softplus(0.01 * t[..., 1:]))),
+    ])
+
+    # Do inference.
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.01), loss=negloglik)
+    model.fit(data1, data2, epochs=1000, verbose=False);
+
+
+    # print(x_tst)
+   # print(K.eval(x_tst))
+    # Make predictions.
+
+    # print(model.get_weights())
+    # print("------")
+    # print(model.get_weights()[0])
+    # print(model.get_weights()[1])
+    #yhat = model(x_tst)
+    #yhats = [model(x_tst) for _ in range(3)]
+    #print(K.eval(yhats))
+    #print(K.eval(np.squeeze(yhat.mean())))
+    #print(K.eval(yhat.mean()))
+    #print("------")
+   # print(K.eval(yhat))
+    #print(K.eval(yhat.variance()))
+    #yhat = model(x_tst)
+    # print(K.eval(np.squeeze(yhat.mean())))
+    #print(K.eval(yhat.mean()))
+    #print("------")
+    # print(K.eval(yhat))
+    #print(K.eval(yhat.variance()))
+
+    #[print(np.squeeze(w.numpy())) for w in model.weights];
+    #yhat = model(x_tst)
+    #assert isinstance(yhat, tfd.Distribution)
+
+    return model
+
+
+def networkSample(mymodel, size, x_tst):
+    yhats = [mymodel(x_tst) for _ in range(size)]
+    m = np.zeros(size)
+    s = np.zeros(size)
+    for i, yhat in enumerate(yhats):
+        m[i] = np.squeeze(yhat.mean())
+        #s[i] = np.squeeze(yhat.stddev())
+    med = np.mean(m)
+    #position = np.where(m == med)
+    mystd = np.std(m)
+
+    return med, mystd
+
+
+
 
 
 if __name__ == "__main__":
@@ -150,13 +215,91 @@ if __name__ == "__main__":
     data1, data2 = np.hsplit(my_data, [9])
     #print(data1)
     #print(data2)
+    x_tst = tf.expand_dims(data1[1, :], 0)
+    x_tst1 = tf.expand_dims(data1[2, :], 0)
+    x_tst2 = tf.expand_dims(data1[3, :], 0)
+    x_tst3 = tf.expand_dims(data1[4, :], 0)
+    x_tst4 = tf.expand_dims(data1[5, :], 0)
+    x_tst5 = tf.expand_dims(data1[6, :], 0)
+    x_tst6 = tf.expand_dims(data1[7, :], 0)
+    x_tst7 = tf.expand_dims(data1[8, :], 0)
+    x_tst8 = tf.expand_dims(data1[9, :], 0)
+    x_tst9 = tf.expand_dims(data1[10, :], 0)
 
     #neuralNetworkSimple()
     #neuralNetworkStandardDev()
+#   neuralNetworkExpanded()
+    print("------")
+    myModel = neuralNetworkExpanded2()
 
-    # denseVar= DenseVariational(1, posterior_mean_field, prior_trainable, kl_weight=1 / data1.shape[0]), tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1))
-    neuralNetworkExpanded()
+    med, std = networkSample(myModel, 15, x_tst)
 
+    print(med)
+    print(std)
+
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst1)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst2)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst3)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst4)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst5)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst6)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst7)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst8)
+
+    print(med)
+    print(std)
+    print("------")
+
+    #size muss ungerade sein!!
+    med, std = networkSample(myModel, 15, x_tst9)
+
+    print(med)
+    print(std)
 
 
 
