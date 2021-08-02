@@ -43,6 +43,11 @@ Um MarioAI zu installieren, müssen die folgenden Schritte ausgeführt werden:
 - Gibt es neuronale Netzwerke die nicht probabilistisch sind? Ja,  die ganzen klassischen, zb. MLP.
 - Wie samplen wir den gesamten Zustandraum und mit welchem RL-Algorithmus (PPO oder zufällig)? **Wir sollen den Startzustand auch samplen!**
 
+## Fragen 03.08
+- Welche Actions (Diskret oder kontinuierlich)
+- Wie viele Daten zum Lernen verwenden? Wie prüfen, das richtig gelernt wurde?
+- Was gibt das Neuronale Netzwerk zurück?
+
 ## TODO
 - [ ] `setup.py` via setuptools einrichten um Installation zu vereinfachen
 - [ ] Package erstellen
