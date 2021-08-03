@@ -101,39 +101,45 @@ if __name__ == "__main__":
     env = SwingUpWrapper()
 
     #100 durchläufe werden in csv gespeichert
-    for _ in range(5):
+    for _ in range(1):
 
         done = False
         state = env.reset()
         observations_list = []
         observations = []
+        numberOfValuesPerObservation = 4
         numberOfTimeSteps = 5
-        numberOfValuesPerObservation = (numberOfTimeSteps-1)*4+2
-
 
 
         while not done:
             action = env.org_env.action_space.sample()
             #action = choice([0])
-            print("space lower", env.org_env.action_space)
-            print("current action", action)
+            #print("space lower", env.org_env.action_space)
+            #print("current action", action)
             obs, rew, done, info = env.step(action)
+            print(obs)
             #observations.append(obs)
             observations.append(obs[0])
+            observations.append(obs[1])
+            observations.append(obs[4])
             observations.append(obs[len(obs)-1])
             if len(observations) > numberOfValuesPerObservation*numberOfTimeSteps:
                 observations.pop(0)
-                observations.pop(1)
+                observations.pop(0)
+                observations.pop(0)
+                observations.pop(0)
                 observations_list.append(observations.copy())
-            print(obs)
-            print(info)
+            #print(obs)
+           # print(info)
            # print("space", action_space)
             #env.org_env.render()
 
         #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
         df = pd.DataFrame(observations_list)
-        df.to_csv("observations.csv", index=None, header=None, mode="a")
-        #df.to_csv("observations.csv", index=None, header=None)
+        #df.to_csv("observations.csv", index=None, header=None, mode="a")
+        df.drop(df.columns[17], axis=1, inplace=True)
+        df.drop(df.columns[17], axis=1, inplace=True)
+        df.to_csv("observations.csv", index=None, header=None)
 
 
 
