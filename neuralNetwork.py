@@ -208,13 +208,13 @@ def networkSample(mymodel, size, x_tst):
 def plot(ground_truths, predictions):
     # TODO Fix shapes of input etc
     x_vals = np.arange(0, len(ground_truths)-1)
-    print("X_Vals: ", x_vals, " Länge: ", len(x_vals))
+    #print("X_Vals: ", x_vals, " Länge: ", len(x_vals))
     fig = plt.figure(figsize=(19, 12))
     plt.plot(ground_truths, label='Truth')
     pred = [i[0] for i in predictions]
     pred_plot = plt.plot(pred, label='Predicitons', color='orange')
     std_dev = [i[1] for i in predictions]
-    print("Std_Dev: ", std_dev, " Länge: ", len(std_dev))
+    #print("Std_Dev: ", std_dev, " Länge: ", len(std_dev))
     higher_dev = np.zeros_like(std_dev)
     lower_dev = np.zeros_like(std_dev)
     for x in range(len(std_dev)):
