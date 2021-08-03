@@ -215,6 +215,11 @@ if __name__ == "__main__":
     data1, data2 = np.hsplit(my_data, [9])
     #print(data1)
     #print(data2)
+    maxData2 = max(data2)
+    print("max", maxData2)
+    minData2 = min(data2)
+    print("min", minData2)
+
     x_tst = tf.expand_dims(data1[1, :], 0)
     x_tst1 = tf.expand_dims(data1[2, :], 0)
     x_tst2 = tf.expand_dims(data1[3, :], 0)

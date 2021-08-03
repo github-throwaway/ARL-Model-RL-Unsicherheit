@@ -21,6 +21,9 @@ tfd = tfp.distributions
 from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpEnv, CartPoleSwingUpV1, CartPoleSwingUpV0
 
 
+
+
+
 class SwingUpWrapper(gym.Env):
 
     # Could be one of:
@@ -50,12 +53,13 @@ class SwingUpWrapper(gym.Env):
     def step(self, action):
         # observation = [x_pos, x_dot, np.cos(theta),np.sin(theta),theta_dot]
         observation, reward, done, info = self.org_env.step(action)
-        #pole_angle = math.atan(observation[3] / observation[2])
-        pole_angle = observation[2]
+        pole_angle = math.atan(observation[3] / observation[2])
+        #pole_angle = observation[2]
 
         my_obs = list(observation)
         if self.min_range < pole_angle < self.max_range:
-            fake_observation = max(min(pole_angle + uniform(-self.offset, self.offset),1),-1)
+            fake_observation = pole_angle + uniform(-self.offset, self.offset)
+            fake_observation= checkBoundaries(fake_observation)
             # todo: verrauschten winkel & Winkelgeschwindigkeit ersetzen
             # differenz zwischen winkel von winkelgeschwindigkeit abziehen
             # nur zurück liefern, nicht im original env verändern!
@@ -81,6 +85,15 @@ class SwingUpWrapper(gym.Env):
 
         return my_obs, reward, done, info
 
+def checkBoundaries(fake_observation):
+    if (fake_observation>math.pi/2) :
+        return math.pi/2
+    elif (fake_observation < -math.pi/2) :
+        return -math.pi/2
+
+    else:
+        return fake_observation
+
 
 
 
@@ -94,8 +107,9 @@ if __name__ == "__main__":
         state = env.reset()
         observations_list = []
         observations = []
-        numberOfValuesPerObservation = 2
         numberOfTimeSteps = 5
+        numberOfValuesPerObservation = (numberOfTimeSteps-1)*4+2
+
 
 
         while not done:
