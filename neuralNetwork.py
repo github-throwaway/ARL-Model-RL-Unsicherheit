@@ -1,3 +1,4 @@
+import csv
 import math
 import statistics
 
@@ -209,103 +210,41 @@ if __name__ == "__main__":
 
     #print("CSV An Stelle 12: ", csv_obs.values[12])
     # csv_obs.values[12][0] returns the index 12, so start with 1
-    csv_obs = pd.read_csv('observations.csv')
-    my_data = genfromtxt('observations.csv', delimiter=',').astype(np.float32)
+    file = open("observations.csv")
+    reader = csv.reader(file)
+    number_of_rows = len(list(reader))
 
+    print(number_of_rows)
+    my_data = genfromtxt('observations.csv', delimiter=',').astype(np.float32)
     #number of entries in rows -1
     data1, data2 = np.hsplit(my_data, [17])
-    print(data1)
-    print(data2)
+
+    out_of_sample = genfromtxt('outOfSample.csv', delimiter=',').astype(np.float32)
+    run1, run2 = np.hsplit(out_of_sample, [17])
+
+    #print(data1)
+    #print(data2)
     #maxData2 = max(data2)
     #print("max", maxData2)
     #minData2 = min(data2)
    # print("min", minData2)
 
-    x_tst = tf.expand_dims(data1[1, :], 0)
-    x_tst1 = tf.expand_dims(data1[2, :], 0)
-    x_tst2 = tf.expand_dims(data1[3, :], 0)
-    x_tst3 = tf.expand_dims(data1[4, :], 0)
-    x_tst4 = tf.expand_dims(data1[5, :], 0)
-    x_tst5 = tf.expand_dims(data1[6, :], 0)
-    x_tst6 = tf.expand_dims(data1[7, :], 0)
-    x_tst7 = tf.expand_dims(data1[8, :], 0)
-    x_tst8 = tf.expand_dims(data1[9, :], 0)
-    x_tst9 = tf.expand_dims(data1[10, :], 0)
-
-    #neuralNetworkSimple()
-    #neuralNetworkStandardDev()
-#   neuralNetworkExpanded()
-    print("------")
+    # neuralNetworkSimple()
+    # neuralNetworkStandardDev()
+    # neuralNetworkExpanded()
     myModel = neuralNetworkExpanded2()
 
-    med, std = networkSample(myModel, 15, x_tst)
+    #for index in range(1, number_of_rows, 1):
+    for index in range(1, 100, 1):
+        #x_tst = tf.expand_dims(data1[index, :], 0)
+        x_tst = tf.expand_dims(run1[index, :], 0)
+        med, std = networkSample(myModel, 100, x_tst)
 
-    print(med)
-    print(std)
+        print(med)
+        print(std)
 
-    print("------")
+        print("------")
 
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst1)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst2)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst3)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst4)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst5)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst6)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst7)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst8)
-
-    print(med)
-    print(std)
-    print("------")
-
-    #size muss ungerade sein!!
-    med, std = networkSample(myModel, 15, x_tst9)
-
-    print(med)
-    print(std)
 
 
 

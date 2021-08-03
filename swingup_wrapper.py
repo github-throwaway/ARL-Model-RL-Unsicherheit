@@ -117,7 +117,7 @@ if __name__ == "__main__":
             #print("space lower", env.org_env.action_space)
             #print("current action", action)
             obs, rew, done, info = env.step(action)
-            print(obs)
+            #print(obs)
             #observations.append(obs)
             observations.append(obs[0])
             observations.append(obs[1])
@@ -136,10 +136,14 @@ if __name__ == "__main__":
 
         #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
         df = pd.DataFrame(observations_list)
-        #df.to_csv("observations.csv", index=None, header=None, mode="a")
         df.drop(df.columns[17], axis=1, inplace=True)
         df.drop(df.columns[17], axis=1, inplace=True)
-        df.to_csv("observations.csv", index=None, header=None)
+        # hier werden die letzten 4 zeitschritte inklusive den aktuellen schritt in einer zeile abgespeichert
+        # für die vergangenen zeitschritte wird 'x_pos', 'x_dot', 'theta_dot', '(Fake-)Theta' abgespeichert
+        # für den aktuellen nur die x-position und der winkel
+        df.to_csv("observations.csv", index=None, header=None, mode="a")
+        #df.to_csv("outOfSample.csv", index=None, header=None, mode="a")
+        #df.to_csv("observations.csv", index=None, header=None)
 
 
 
