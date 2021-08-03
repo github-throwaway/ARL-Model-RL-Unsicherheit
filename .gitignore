@@ -7,6 +7,7 @@ target/
 marioai/
 gym-cartpole-swingup/
 *.csv
+*.png
 
 # C extensions
 *.so
