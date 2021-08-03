@@ -6,7 +6,7 @@ __pycache__/
 target/
 marioai/
 gym-cartpole-swingup/
-observations*
+*.csv
 
 # C extensions
 *.so
