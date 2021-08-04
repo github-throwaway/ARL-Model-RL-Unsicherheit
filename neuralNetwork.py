@@ -27,9 +27,13 @@ import tensorflow_probability as tfp
 
 tfd = tfp.distributions
 
+
 from tensorflow_probability.python.layers.dense_variational_v2 import _make_kl_divergence_penalty, DenseVariational
 
+
+
 negloglik = lambda y, p_y: -p_y.log_prob(y)
+
 
 
 def neuralNetworkSimple():
