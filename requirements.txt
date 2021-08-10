@@ -1,6 +1,7 @@
 gym~=0.18.3
-tensorflow
-pandas
+tensorflow==2.5.0
+tensorflow_probability==0.13.0
+pandas==1.2.5
 matplotlib
 numpy
 stable-baselines3
