@@ -211,6 +211,12 @@ def networkSample(mymodel, size, x_tst):
 
 def plot(ground_truths, predictions):
     # TODO Fix shapes of input etc
+    # for k in range(len(ground_truths)):
+    #     if ground_truths[k]>math.pi:
+    #         ground_truths[k]=2*math.pi-ground_truths[k]
+    #     if predictions[k]>math.pi:
+    #         predictions[k]=2*math.pi-predictions[k]
+
     x_vals = np.arange(0, len(ground_truths)-1)
     #print("X_Vals: ", x_vals, " Länge: ", len(x_vals))
     fig = plt.figure(figsize=(19, 12))
@@ -263,6 +269,7 @@ if __name__ == "__main__":
     # neuralNetworkStandardDev()
     # neuralNetworkExpanded()
     myModel = neuralNetworkExpanded2()
+    print(myModel)
     predicted_angle = []
     for index in range(1, number_of_rows, 1):
         # for index in range(1, 100, 1):
@@ -271,10 +278,10 @@ if __name__ == "__main__":
         med, std = networkSample(myModel, 100, x_tst)
         predicted_angle.append((med, std))
 
-        print(index, "/", number_of_rows, " ---------")
+        #print(index, "/", number_of_rows, " ---------")
         print(med)
         print(std)
 
-    df = pd.DataFrame(predicted_angle)
-    df.to_csv("predictions.csv", index=None, header=None, mode="a")
-    plot(run2, predicted_angle)
+    # df = pd.DataFrame(predicted_angle)
+    # df.to_csv("predictions.csv", index=None, header=None, mode="a")
+    # plot(run2, predicted_angle)
