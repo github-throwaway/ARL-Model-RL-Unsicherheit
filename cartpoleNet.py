@@ -14,6 +14,9 @@ class CartpoleNet():
     def __init__(self):
         print("init")
 
+
+
+
     def trainNeuralNetwork(self):
         file = open("outOfSample.csv")
         reader = csv.reader(file)
@@ -28,6 +31,7 @@ class CartpoleNet():
 
         myModel = neuralNetworkExpanded3(data1, data2)
         print("MODEL", myModel)
+        print("MODEL summary", myModel)
 
         # for index in range(1, number_of_rows, 1):
         #     # for index in range(1, 100, 1):
@@ -46,10 +50,11 @@ if __name__ == "__main__":
     cartNet = CartpoleNet()
 
     myModel = cartNet.trainNeuralNetwork()
+    #myModel.save('models/medical_trial_model.h5')
 
     observations = []
     numberOfValuesPerObservation = 5
-    numberOfTimeSteps = 5
+    numberOfTimeSteps = 4
 
     for _ in range(1):
 
@@ -67,7 +72,7 @@ if __name__ == "__main__":
                 observations.append(obs[0])
                 observations.append(obs[1])
                 observations.append(obs[4])
-                # ONLY WHEN ACTION IS SAFED TOO
+                # ONLY WHEN ACTION IS SAVED TOO
                 observations.append(action[0])
                 observations.append(obs[len(obs) - 1])
 
@@ -88,11 +93,19 @@ if __name__ == "__main__":
                 print(obs)
                 print("action", action)
 
+                observations.pop(len(observations)-1)
+                observations.append(obs[0])
+                observations.append(obs[1])
+                observations.append(obs[4])
+                # ONLY WHEN ACTION IS SAVED TOO
+                observations.append(action[0])
+                observations.append(obs[len(obs) - 1])
+
                 observations.pop(0)
                 observations.pop(0)
                 observations.pop(0)
                 observations.pop(0)
-                # ONLY WHEN ACTION IS SAFED TOO
+                # ONLY WHEN ACTION IS SAVED TOO
                 observations.pop(0)
 
-        env.org_env.render()
+                env.org_env.render()

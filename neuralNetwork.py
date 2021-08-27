@@ -35,6 +35,7 @@ negloglik = lambda y, p_y: -p_y.log_prob(y)
 
 
 
+
 def neuralNetworkSimple():
     # No Uncertainty
     model = tf.keras.Sequential([
@@ -207,7 +208,6 @@ def neuralNetworkExpanded3(data1, data2):
     model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.01), loss=negloglik)
     model.fit(data1, data2, epochs=1000, verbose=False);
 
-
     return model
 
 
@@ -273,16 +273,14 @@ if __name__ == "__main__":
     lenlist= len(my_data[0])
     data1, data2 = np.hsplit(my_data, [len(my_data[0])-1])
 
-    print(data1)
-    print(data2)
+
 
 
     out_of_sample = genfromtxt('outOfSample.csv', delimiter=',').astype(np.float32)
     #run1, run2 = np.hsplit(out_of_sample, [17])
     run1, run2 = np.hsplit(out_of_sample, [len(out_of_sample[0])-1])
 
-    print(run1)
-    print(run2)
+
 
     # print(data1)
     # print(data2)
@@ -296,6 +294,7 @@ if __name__ == "__main__":
     # neuralNetworkExpanded()
     myModel = neuralNetworkExpanded2()
     print(myModel)
+    print(run1)
     predicted_angle = []
     for index in range(1, number_of_rows, 1):
         # for index in range(1, 100, 1):

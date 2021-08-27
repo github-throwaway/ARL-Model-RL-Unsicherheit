@@ -137,7 +137,7 @@ if __name__ == "__main__":
             observations.append(obs[0])
             observations.append(obs[1])
             observations.append(obs[4])
-            # ONLY WHEN ACTION IS SAFED TOO
+            # ONLY WHEN ACTION IS SAVED TOO
             observations.append(action[0])
 
             observations.append(obs[len(obs)-1])
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 observations.pop(0)
                 observations.pop(0)
                 observations.pop(0)
-                # ONLY WHEN ACTION IS SAFED TOO
+                # ONLY WHEN ACTION IS SAVED TOO
                 observations.pop(0)
 
                 observations_list.append(observations.copy())
