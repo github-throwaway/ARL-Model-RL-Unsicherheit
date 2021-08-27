@@ -6,12 +6,10 @@ import tensorflow.compat.v2 as tf
 from swingup_wrapper import SwingUpWrapper
 from neuralNetwork import neuralNetworkExpanded3, networkSample
 
-
-
 negloglik = lambda y, p_y: -p_y.log_prob(y)
 
-class CartpoleNet():
 
+class CartpoleNet():
 
     def __init__(self):
         print("init")
@@ -42,25 +40,59 @@ class CartpoleNet():
 
         return myModel
 
+
 if __name__ == "__main__":
-        env = SwingUpWrapper()
-        cartNet= CartpoleNet()
+    env = SwingUpWrapper()
+    cartNet = CartpoleNet()
 
-        myModel = cartNet.trainNeuralNetwork()
+    myModel = cartNet.trainNeuralNetwork()
 
-        for _ in range(4):
+    observations = []
+    numberOfValuesPerObservation = 5
+    numberOfTimeSteps = 5
 
-            done = False
-            state = env.reset()
+    for _ in range(1):
 
-            while not done:
+        done = False
+        state = env.reset()
+
+        while not done:
+            if len(observations) < numberOfValuesPerObservation * numberOfTimeSteps:
                 action = env.org_env.action_space.sample()
-
                 obs, rew, done, info = env.step(action)
-
-                env.org_env.render()
 
                 print(obs)
                 print("action", action)
-                # print(info)
-            # print("space", action_space)
+
+                observations.append(obs[0])
+                observations.append(obs[1])
+                observations.append(obs[4])
+                # ONLY WHEN ACTION IS SAFED TOO
+                observations.append(action[0])
+                observations.append(obs[len(obs) - 1])
+
+            elif len(observations) == numberOfValuesPerObservation * numberOfTimeSteps:
+                # TODO: take no random action, take different actions and give it into neural network
+                action = env.org_env.action_space.sample()
+                observations.append(action[0])
+
+                # TODO: INTO NN:
+                print("test obs", observations)
+                x_tst = tf.expand_dims(observations, 0)
+                med, std = networkSample(myModel, 100, x_tst)
+
+                # TODO calculate which action is best and safest
+
+                obs, rew, done, info = env.step(action)
+
+                print(obs)
+                print("action", action)
+
+                observations.pop(0)
+                observations.pop(0)
+                observations.pop(0)
+                observations.pop(0)
+                # ONLY WHEN ACTION IS SAFED TOO
+                observations.pop(0)
+
+        env.org_env.render()
