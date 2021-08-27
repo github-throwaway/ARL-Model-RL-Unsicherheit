@@ -31,7 +31,6 @@ tfd = tfp.distributions
 from tensorflow_probability.python.layers.dense_variational_v2 import _make_kl_divergence_penalty, DenseVariational
 
 
-
 negloglik = lambda y, p_y: -p_y.log_prob(y)
 
 
@@ -46,6 +45,7 @@ def neuralNetworkSimple():
     # Do inference.
     model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.05), loss=negloglik)
     model.fit(data1, data2, epochs=500, verbose=False)
+
 
     x_tst = tf.expand_dims(data1[1, :], 0)
     # print(x_tst)
@@ -194,6 +194,22 @@ def neuralNetworkExpanded2():
     # model.save('model.dat')
     return model
 
+def neuralNetworkExpanded3(data1, data2):
+    # Epistemic Uncertainty
+    model = tf.keras.Sequential([
+        tfp.layers.DenseVariational(1 + 1, posterior_mean_field, prior_trainable, kl_weight=1 / data1.shape[0]),
+        tfp.layers.DistributionLambda(
+            lambda t: tfd.Normal(loc=t[..., :1],
+                                 scale=1e-3 + tf.math.softplus(0.01 * t[..., 1:]))),
+    ])
+
+    # Do inference.
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.01), loss=negloglik)
+    model.fit(data1, data2, epochs=1000, verbose=False);
+
+
+    return model
+
 
 def networkSample(mymodel, size, x_tst):
     yhats = [mymodel(x_tst) for _ in range(size)]
@@ -253,10 +269,20 @@ if __name__ == "__main__":
     print(number_of_rows)
     my_data = genfromtxt('observations.csv', delimiter=',').astype(np.float32)
     # number of entries in rows -1
-    data1, data2 = np.hsplit(my_data, [17])
+    #data1, data2 = np.hsplit(my_data, [17])
+    lenlist= len(my_data[0])
+    data1, data2 = np.hsplit(my_data, [len(my_data[0])-1])
+
+    print(data1)
+    print(data2)
+
 
     out_of_sample = genfromtxt('outOfSample.csv', delimiter=',').astype(np.float32)
-    run1, run2 = np.hsplit(out_of_sample, [17])
+    #run1, run2 = np.hsplit(out_of_sample, [17])
+    run1, run2 = np.hsplit(out_of_sample, [len(out_of_sample[0])-1])
+
+    print(run1)
+    print(run2)
 
     # print(data1)
     # print(data2)

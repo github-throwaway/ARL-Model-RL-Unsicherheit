@@ -120,7 +120,9 @@ if __name__ == "__main__":
         state = env.reset()
         observations_list = []
         observations = []
-        numberOfValuesPerObservation = 4
+        #numberOfValuesPerObservation = 4
+        # ONLY WHEN ACTION IS SAFED TOO
+        numberOfValuesPerObservation = 5
         numberOfTimeSteps = 5
 
 
@@ -135,26 +137,40 @@ if __name__ == "__main__":
             observations.append(obs[0])
             observations.append(obs[1])
             observations.append(obs[4])
+            # ONLY WHEN ACTION IS SAFED TOO
+            observations.append(action[0])
+
             observations.append(obs[len(obs)-1])
+
             if len(observations) > numberOfValuesPerObservation*numberOfTimeSteps:
                 observations.pop(0)
                 observations.pop(0)
                 observations.pop(0)
                 observations.pop(0)
+                # ONLY WHEN ACTION IS SAFED TOO
+                observations.pop(0)
+
                 observations_list.append(observations.copy())
             print(obs)
-            print(info)
+            print("action", action)
+            #print(info)
            # print("space", action_space)
             env.org_env.render()
 
         #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
         df = pd.DataFrame(observations_list)
-        df.drop(df.columns[17], axis=1, inplace=True)
-        df.drop(df.columns[17], axis=1, inplace=True)
+        # WHEN ACTION IS NOT SAFED
+        #df.drop(df.columns[17], axis=1, inplace=True)
+        #df.drop(df.columns[17], axis=1, inplace=True)
+        # ONLY WHEN ACTION IS SAFED TOO
+        df.drop(df.columns[20], axis=1, inplace=True)
+        df.drop(df.columns[20], axis=1, inplace=True)
+        df.drop(df.columns[20], axis=1, inplace=True)
+
         # hier werden die letzten 4 zeitschritte inklusive den aktuellen schritt in einer zeile abgespeichert
         # für die vergangenen zeitschritte wird 'x_pos', 'x_dot', 'theta_dot', '(Fake-)Theta' abgespeichert
         # für den aktuellen nur die x-position und der winkel
-        df.to_csv("observations.csv", index=None, header=None, mode="a")
+        #df.to_csv("observations.csv", index=None, header=None, mode="a")
         #df.to_csv("outOfSample.csv", index=None, header=None, mode="a")
         #df.to_csv("observations.csv", index=None, header=None)
         #df.to_csv("outOfSample.csv", index=None, header=None)
