@@ -212,15 +212,27 @@ def neuralNetworkExpanded3(data1, data2):
 
 
 def networkSample(mymodel, size, x_tst):
+    #yhat = mymodel(x_tst)
     yhats = [mymodel(x_tst) for _ in range(size)]
+    #print("mmmmmmm", yhat.scale)
+    #yhat = mymodel(x_tst)
+    #print("fffffff", yhat.scale)
     m = np.zeros(size)
     s = np.zeros(size)
     for i, yhat in enumerate(yhats):
-        m[i] = np.squeeze(yhat.mean())
-        # s[i] = np.squeeze(yhat.stddev())
+         m[i] = np.squeeze(yhat.mean())
+         # s[i] = np.squeeze(yhat.stddev())
     med = np.mean(m)
     # position = np.where(m == med)
     mystd = np.std(m)
+
+    return med, mystd
+
+def networkSample2(mymodel, size, x_tst):
+    yhats = mymodel(x_tst)
+    #yhats = [mymodel(x_tst) for _ in range(size)]
+    med = yhats.loc
+    mystd = yhats.scale
 
     return med, mystd
 
@@ -294,18 +306,19 @@ if __name__ == "__main__":
     # neuralNetworkExpanded()
     myModel = neuralNetworkExpanded2()
     print(myModel)
-    print(run1)
+    #print(run1)
     predicted_angle = []
     for index in range(1, number_of_rows, 1):
         # for index in range(1, 100, 1):
         # x_tst = tf.expand_dims(data1[index, :], 0)
         x_tst = tf.expand_dims(run1[index, :], 0)
-        med, std = networkSample(myModel, 100, x_tst)
+       # med, std = networkSample(myModel, 100, x_tst)
+        med, std = networkSample(myModel, 15, x_tst)
         predicted_angle.append((med, std))
 
         #print(index, "/", number_of_rows, " ---------")
-        print(med)
-        print(std)
+        print("mean", med)
+        print("std", std)
 
     # df = pd.DataFrame(predicted_angle)
     # df.to_csv("predictions.csv", index=None, header=None, mode="a")

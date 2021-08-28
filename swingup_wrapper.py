@@ -114,7 +114,7 @@ if __name__ == "__main__":
     env = SwingUpWrapper()
 
     #100 durchläufe werden in csv gespeichert
-    for _ in range(3):
+    for _ in range(15):
 
         done = False
         state = env.reset()
@@ -155,7 +155,7 @@ if __name__ == "__main__":
             print("action", action)
             #print(info)
            # print("space", action_space)
-            env.org_env.render()
+           # env.org_env.render()
 
         #columns=['x_pos', 'x_dot', 'cos(theta)', 'sin(theta)', 'theta_dot', 'Fake-Theta'] reward
         df = pd.DataFrame(observations_list)
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         # hier werden die letzten 4 zeitschritte inklusive den aktuellen schritt in einer zeile abgespeichert
         # für die vergangenen zeitschritte wird 'x_pos', 'x_dot', 'theta_dot', '(Fake-)Theta' abgespeichert
         # für den aktuellen nur die x-position und der winkel
-        #df.to_csv("observations.csv", index=None, header=None, mode="a")
+        df.to_csv("observations.csv", index=None, header=None, mode="a")
         #df.to_csv("outOfSample.csv", index=None, header=None, mode="a")
         #df.to_csv("observations.csv", index=None, header=None)
         #df.to_csv("outOfSample.csv", index=None, header=None)
