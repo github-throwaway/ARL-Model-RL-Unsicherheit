@@ -171,6 +171,16 @@ class USUCEnvWithNN(USUCEnv):
 
         # set nn
         self.nn = nn
+        self.observation_history = []
+
+    def step(self, action):
+        new_observation, reward, done, info = super().step(action)
+        angle, reward = nn(new_observation)
+
+    def reset(self, start_angle: float = None, start_pos: float = None) -> tuple:
+        pass
+
+
 
 
 def register() -> None:
