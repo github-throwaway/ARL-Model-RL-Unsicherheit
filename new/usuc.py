@@ -4,7 +4,7 @@ import gym
 import numpy as np
 from collections import namedtuple
 from gym import spaces
-from typing import Tuple, List
+from typing import Tuple, List, Callable
 
 # Could be one of:
 # - CartPoleSwingUp-v0,
@@ -18,7 +18,8 @@ import usuc
 
 
 class USUCEnv(gym.Env):
-    def __init__(self, noisy_circular_sector=(0, 0.5 * math.pi), noise_offset=0.1, render=False, verbose=False):
+    def __init__(self, reward_fn: Callable, noisy_circular_sector=(0, 0.5 * math.pi), noise_offset=0.1, render=False,
+                 verbose=False):
         """
         **Uncertain SwingUp Cartpole Environment**
 
@@ -52,6 +53,9 @@ class USUCEnv(gym.Env):
         # TODO: when using cos and sin as angle representation -> adapt reset and step function
         high = np.array([np.finfo(np.float32).max] * 4, dtype=np.float32)
         self.observation_space = spaces.Box(low=-high, high=high)
+
+        # set reward function
+        self.reward_fn = reward_fn
 
     def seed(self, seed=None):
         self.wrapped_env.seed()
@@ -165,7 +169,26 @@ class USUCEnv(gym.Env):
         return pformat(vars(self), sort_dicts=False)
 
 
+class USUCEnvWithNN(USUCEnv):
+    def __init__(self, nn):
+        super().__init__()
+
+        # set nn
+        self.nn = nn
+
+
 def register():
+    print("registering gym...")
+    from gym.envs.registration import register
+
+    # USUCEnv registration
+    id = 'USUCEnv-v0'
+    register(
+        id,
+        entry_point='usuc:USUCEnv',
+    )
+    print("registered Uncertain SwingUp Cartpole Env as", id)
+
     print("registering gym...")
     from gym.envs.registration import register
     id = 'USUCEnv-v0'
@@ -208,10 +231,6 @@ def random_actions(env: gym.Env, max_steps=1000) -> Tuple[List[list], list]:
             break
 
     return observations, information
-
-
-
-
 
 
 if __name__ == '__main__':
