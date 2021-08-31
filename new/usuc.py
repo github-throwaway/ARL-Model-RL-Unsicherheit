@@ -1,6 +1,8 @@
 # coding: utf-8
 import math
 import gym
+import random
+import itertools
 import numpy as np
 from collections import namedtuple
 from gym import spaces
@@ -16,10 +18,11 @@ from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV0 as Cart
 
 
 class USUCEnv(gym.Env):
+    # TODO: write error message when env not initilaized via reset
     def __init__(self,
                  noisy_circular_sector=(0, 0.5 * math.pi),
                  noise_offset=0.1,
-                 reward_fn: Callable = lambda obs, reward: reward,
+                 reward_fn: Callable = lambda obs, reward, info, action: reward,
                  render=False,
                  verbose=False):
         """
@@ -99,57 +102,64 @@ class USUCEnv(gym.Env):
 
         # transform theta_sin, theta_cos to angle (rad)
         if theta_sin > 0:
-            pole_angle = math.acos(theta_cos)
+            theta = math.acos(theta_cos)
         else:
-            pole_angle = math.acos(theta_cos * -1) + math.pi
+            theta = math.acos(theta_cos * -1) + math.pi
+
+        # TODO: move jump to bottom
+        # if observation[3]>0:
+        #     pole_angle = (math.acos(observation[2]) + math.pi) % (math.pi*2)
+        # else:
+        #     pole_angle = (math.acos(observation[2]*-1)+math.pi * 2) % (math.pi*2)
 
         # if pole angle is noisy circular sector -> create noisy fake angle
         ncs_start, ncs_end = self.noisy_circular_sector
-        if ncs_start < pole_angle < ncs_end:
+        if ncs_start < theta < ncs_end:
             # create fake angle
             rng = np.random.default_rng()
             noise = rng.normal(scale=self.noise_offset)
-            fake_angle = pole_angle + noise
+            fake_theta = theta + noise
 
-            # check 0 < fake_angle < 2pi and adapt angle if necessary
+            # check 0 < fake_theta < 2pi and adapt angle if necessary
             # TODO: not necessary when using sin/cos for angle representation
             # TODO: is this even necessary?? <- couldnt we use case 4 of the regression tutorial to find the rads which are noisy?
-            if fake_angle > 2 * math.pi:
-                fake_angle -= 2 * math.pi
-            elif fake_angle < 0:
-                fake_angle += 2 * math.pi
+            if fake_theta > 2 * math.pi:
+                fake_theta -= 2 * math.pi
+            elif fake_theta < 0:
+                fake_theta += 2 * math.pi
 
             # adapt theta_dot
-            # TODO: differenz zwischen dem originalen winkel und dem fake winkel von winkelgeschwindigkeit abziehen
-            # fake_angular_velocity = observation[4] - (pole_angle - fake_angle)
+            fake_theta_dot = theta_dot + noise * 100 - (theta - fake_theta)
 
         else:
-            fake_angle = None
+            fake_theta = None
+            fake_theta_dot = None
 
         # build new observation
         new_observation = [
             x_pos,
             x_dot,
-            fake_angle if fake_angle else pole_angle,
-            theta_dot
+            fake_theta if fake_theta else theta,
+            fake_theta_dot if fake_theta_dot else theta_dot
         ]
 
         # calculate reward
-        reward = self.reward_fn(new_observation, reward)
+        new_reward = self.reward_fn(new_observation, reward, info, action)
 
         # update info object
-        info["uncertain"] = fake_angle is not None
-        info["original_angle"] = pole_angle
+        info["uncertain"] = fake_theta is not None
+        info["original_theta"] = theta
+        info["action"] = action
 
         # logging
         if self.verbose:
             print("=== step ===")
             print("action:", action)
-            print("original angle:", pole_angle)
-            print("fake angle", fake_angle)
+            print("original theta:", theta)
+            print("fake angle", fake_theta)
             print("observation:", new_observation)
 
-        return new_observation, reward, done, info
+        return new_observation, new_reward, done, info
 
     def render(self, mode="human", **kwargs) -> None:
         if self.should_render:
@@ -166,21 +176,69 @@ class USUCEnv(gym.Env):
 
 
 class USUCEnvWithNN(USUCEnv):
-    def __init__(self, nn):
-        super().__init__()
+    def __init__(self, nn, time_steps, step=0.1, reward_fn=None,**kwargs):
+        super().__init__(**kwargs)
 
-        # set nn
+        # check step size
+        assert self.action_space.low[0] < step < self.action_space.high[0], "Step size exceeds interval size"
+
+        # configuration
         self.nn = nn
-        self.observation_history = []
+        self.reward_fn = reward_fn
+        self.history = []
+        self.time_steps = time_steps
+
+        # TODO: convert continuous action space to discrete action space (use gym classes)
+        lower_bound = self.action_space.low[0]
+        upper_bound = self.action_space.high[0]
+        self.actions = list(np.arange(lower_bound, upper_bound, step))
 
     def step(self, action):
-        new_observation, reward, done, info = super().step(action)
-        angle, reward = nn(new_observation)
+        # function to reorder values to feed neural network with (needs special order)
+        reorder_values = lambda x_pos, x_dot, theta, theta_dot, action: [x_pos, x_dot, theta_dot, action, theta]
+
+        # execute step by underlying env
+        observation, reward, done, info = super().step(action)
+        x_pos, x_dot, theta, theta_dot = observation
+
+        # get recent history
+        recent_history = self.history[-self.time_steps:]
+
+        # build time series from recent history
+        time_series = list(itertools.chain([reorder_values(*obs, action) for (obs, action) in recent_history]))
+
+        # append given action to time series
+        time_series.append(action)
+
+        # make prediction
+        predicted_theta, predicted_std = self.nn.predict(time_series)
+
+        # build return values
+        predicted_observation = [x_pos, x_dot, predicted_theta, theta_dot]
+        new_info = {
+            **info,
+            "predicted_std": predicted_std,
+            "predicted_theta": predicted_theta
+        }
+
+        # calculate reward based on prediction
+        # TODO: install black
+        # TODO: define type for reward fn (also in USUCEnv)
+        new_reward = self.reward_fn(predicted_observation, reward, info, action)
+
+        return predicted_observation, new_reward, done, new_info
 
     def reset(self, start_angle: float = None, start_pos: float = None) -> tuple:
-        pass
+        # reset
+        state = super().reset(start_angle, start_pos)
 
+        # collect first observations
+        for _ in range(self.time_steps):
+            action = random.choice(self.actions)
+            observation, _, _, info = super().step(action)
+            self.history.append((observation, action))
 
+        return state
 
 
 def register() -> None:
