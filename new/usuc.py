@@ -14,8 +14,6 @@ from typing import Tuple, List, Callable
 # - TorchCartPoleSwingUp-v1
 from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV0 as CartPoleSwingUp
 
-import usuc
-
 
 class USUCEnv(gym.Env):
     def __init__(self, reward_fn: Callable, noisy_circular_sector=(0, 0.5 * math.pi), noise_offset=0.1, render=False,
@@ -55,6 +53,7 @@ class USUCEnv(gym.Env):
         self.observation_space = spaces.Box(low=-high, high=high)
 
         # set reward function
+        # TODO: use reward fn in step()
         self.reward_fn = reward_fn
 
     def seed(self, seed=None):
@@ -155,9 +154,9 @@ class USUCEnv(gym.Env):
 
         return new_observation, reward, done, info
 
-    def render(self, mode=None, **kwargs) -> None:
+    def render(self, mode="human", **kwargs) -> None:
         if self.should_render:
-            self.wrapped_env.render()
+            self.wrapped_env.render(mode)
 
     def close(self):
         self.wrapped_env.close()
@@ -177,8 +176,11 @@ class USUCEnvWithNN(USUCEnv):
         self.nn = nn
 
 
-def register():
-    print("registering gym...")
+def register() -> None:
+    """
+    Registers the gyms USUCEnv and USUCEnvWithNN
+    """
+    print("registering gym envs...")
     from gym.envs.registration import register
 
     # USUCEnv registration
@@ -189,14 +191,13 @@ def register():
     )
     print("registered Uncertain SwingUp Cartpole Env as", id)
 
-    print("registering gym...")
-    from gym.envs.registration import register
-    id = 'USUCEnv-v0'
+    # USUCEnvWithNN registration
+    id = 'USUCEnvWithNN-v0'
     register(
         id,
-        entry_point='usuc:USUCEnv',
+        entry_point='usuc:USUCEnvWithNN',
     )
-    print("registered Uncertain SwingUp Cartpole Env as", id)
+    print("registered Uncertain SwingUp Cartpole Env with Neural Network as", id)
 
 
 def random_start_angle() -> float:
