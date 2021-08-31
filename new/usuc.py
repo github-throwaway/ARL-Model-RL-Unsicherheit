@@ -16,7 +16,11 @@ from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV0 as Cart
 
 
 class USUCEnv(gym.Env):
-    def __init__(self, reward_fn: Callable, noisy_circular_sector=(0, 0.5 * math.pi), noise_offset=0.1, render=False,
+    def __init__(self,
+                 noisy_circular_sector=(0, 0.5 * math.pi),
+                 noise_offset=0.1,
+                 reward_fn: Callable = lambda obs, reward: reward,
+                 render=False,
                  verbose=False):
         """
         **Uncertain SwingUp Cartpole Environment**
@@ -119,18 +123,8 @@ class USUCEnv(gym.Env):
             # TODO: differenz zwischen dem originalen winkel und dem fake winkel von winkelgeschwindigkeit abziehen
             # fake_angular_velocity = observation[4] - (pole_angle - fake_angle)
 
-            # update reward
-            # TODO: check should this really be done here??? <- thought we need the neural network for this
-            # reward = 1 - abs(observation[0]) + np.cos(fake_observation)
-            reward = -abs(observation[0]) + (observation[2] - 1)
-            # my_obs.append(reward)
         else:
             fake_angle = None
-            # TODO: check should this really be done here??? <- thought we need the neural network for this
-            # TODO: Reward = cos(theta_noise, x_pos)
-            # Reward == Hypotenuse
-            # reward = 1 - abs(observation[0]) + np.cos(pole_angle)
-            reward = -abs(observation[0]) + (observation[2] - 1)
 
         # build new observation
         new_observation = [
@@ -139,6 +133,9 @@ class USUCEnv(gym.Env):
             fake_angle if fake_angle else pole_angle,
             theta_dot
         ]
+
+        # calculate reward
+        reward = self.reward_fn(new_observation, reward)
 
         # update info object
         info["uncertain"] = fake_angle is not None
