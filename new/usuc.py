@@ -7,6 +7,7 @@ import numpy as np
 from collections import namedtuple
 from gym import spaces
 from typing import Tuple, List, Callable
+from gym.envs.registration import register
 
 # Could be one of:
 # - CartPoleSwingUp-v0,
@@ -18,6 +19,8 @@ from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV0 as Cart
 
 
 class USUCEnv(gym.Env):
+    ID = 'USUCEnv-v0'
+
     # TODO: write error message when env not initilaized via reset
     def __init__(self,
                  noisy_circular_sector=(0, 0.5 * math.pi),
@@ -39,6 +42,7 @@ class USUCEnv(gym.Env):
         :param render: Specifies whether cartpole should be rendered
         :param verbose: Specifies whether additional info should be printed
         """
+
         # noise configuration
         ncs_start, ncs_end = noisy_circular_sector
         assert 0 <= ncs_start < ncs_end <= 2 * math.pi
@@ -62,6 +66,18 @@ class USUCEnv(gym.Env):
         # set reward function
         # TODO: use reward fn in step()
         self.reward_fn = reward_fn
+
+    @staticmethod
+    def register():
+        """
+        Register USUCEnv
+        """
+        env_id = USUCEnv.ID
+        register(
+            env_id,
+            entry_point='usuc:USUCEnv',
+        )
+        print("registered Uncertain SwingUp Cartpole Env as", env_id)
 
     def seed(self, seed=None):
         self.wrapped_env.seed()
@@ -88,6 +104,7 @@ class USUCEnv(gym.Env):
             theta = start_angle
 
         # update state of wrapped env
+        # TODO: move type State out of reset function
         State = namedtuple("State", "x_pos x_dot theta theta_dot")
         self.wrapped_env.state = State(x_pos, x_dot, theta, theta_dot)
 
@@ -176,7 +193,11 @@ class USUCEnv(gym.Env):
 
 
 class USUCEnvWithNN(USUCEnv):
-    def __init__(self, nn, time_steps, step=0.1, reward_fn=None,**kwargs):
+    ID = 'USUCEnvWithNN-v0'
+
+    # TODO: rename var time_steps -> find better name
+    # TODO: observation as dict (is supported by ppo in stabel baseline)
+    def __init__(self, nn, time_steps, step=0.1, reward_fn=None, **kwargs):
         super().__init__(**kwargs)
 
         # check step size
@@ -184,16 +205,32 @@ class USUCEnvWithNN(USUCEnv):
 
         # configuration
         self.nn = nn
-        self.reward_fn = reward_fn
+        self.reward_fn_with_nn = reward_fn
         self.history = []
         self.time_steps = time_steps
 
-        # TODO: convert continuous action space to discrete action space (use gym classes)
+        # convert continuous action space to discrete action space (use gym classes)
         lower_bound = self.action_space.low[0]
         upper_bound = self.action_space.high[0]
         self.actions = list(np.arange(lower_bound, upper_bound, step))
+        self.action_space = spaces.Discrete(len(self.actions))
 
-    def step(self, action):
+    @staticmethod
+    def register():
+        """
+        Register USUCEnvWithNN
+        """
+        env_id = USUCEnvWithNN.ID
+        register(
+            env_id,
+            entry_point='usuc:USUCEnvWithNN',
+        )
+        print("registered Uncertain SwingUp Cartpole Env with Neural Network as", env_id)
+
+    def step(self, action_index):
+        # map action index to action
+        action = self.actions[action_index]
+
         # function to reorder values to feed neural network with (needs special order)
         reorder_values = lambda x_pos, x_dot, theta, theta_dot, action: [x_pos, x_dot, theta_dot, action, theta]
 
@@ -205,7 +242,7 @@ class USUCEnvWithNN(USUCEnv):
         recent_history = self.history[-self.time_steps:]
 
         # build time series from recent history
-        time_series = list(itertools.chain([reorder_values(*obs, action) for (obs, action) in recent_history]))
+        time_series = list(itertools.chain.from_iterable([reorder_values(*obs, action) for (obs, action) in recent_history]))
 
         # append given action to time series
         time_series.append(action)
@@ -217,14 +254,16 @@ class USUCEnvWithNN(USUCEnv):
         predicted_observation = [x_pos, x_dot, predicted_theta, theta_dot]
         new_info = {
             **info,
-            "predicted_std": predicted_std,
-            "predicted_theta": predicted_theta
+            "predicted_theta": predicted_theta,
+            "predicted_std": predicted_std
         }
 
         # calculate reward based on prediction
         # TODO: install black
         # TODO: define type for reward fn (also in USUCEnv)
-        new_reward = self.reward_fn(predicted_observation, reward, info, action)
+        # TODO: define types
+        # TODO: reward = reward * (1 - uncertainty)
+        new_reward = self.reward_fn_with_nn(predicted_observation, reward, new_info, action)
 
         return predicted_observation, new_reward, done, new_info
 
@@ -241,28 +280,13 @@ class USUCEnvWithNN(USUCEnv):
         return state
 
 
-def register() -> None:
+def register_envs() -> None:
     """
     Registers the gyms USUCEnv and USUCEnvWithNN
     """
-    print("registering gym envs...")
-    from gym.envs.registration import register
 
-    # USUCEnv registration
-    id = 'USUCEnv-v0'
-    register(
-        id,
-        entry_point='usuc:USUCEnv',
-    )
-    print("registered Uncertain SwingUp Cartpole Env as", id)
-
-    # USUCEnvWithNN registration
-    id = 'USUCEnvWithNN-v0'
-    register(
-        id,
-        entry_point='usuc:USUCEnvWithNN',
-    )
-    print("registered Uncertain SwingUp Cartpole Env with Neural Network as", id)
+    USUCEnv.register()
+    USUCEnvWithNN.register()
 
 
 def random_start_angle() -> float:
