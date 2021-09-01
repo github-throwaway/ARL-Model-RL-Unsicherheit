@@ -114,7 +114,7 @@ def save(filepath, model):
 def load():
     # TODO: move to if main... when model savings works
     # TODO: replace with data from data generator and transform data to fit input requirements
-    training_set = genfromtxt('time_series.csv', delimiter=',').astype(np.float32)
+    training_set = genfromtxt('trainingset.csv', delimiter=',').astype(np.float32)
     # TODO: check if len() can be replaced with training_set.shape
     x_train, y_train = np.hsplit(training_set, [len(training_set[0]) - 1])
 
@@ -123,3 +123,31 @@ def load():
     model = train(model, x_train, y_train)
 
     return NeuralNet(model)
+
+def sample(model, size, x_tst):
+    yhats = model(x_tst)
+    med = yhats.loc
+    std = yhats.scale
+
+    return med, std
+
+def test():
+    model = load().model
+
+    testset = genfromtxt('testset.csv', delimiter=',').astype(np.float32)
+    run, y_test = np.hsplit(testset, [len(testset[0])-1])
+
+    predicted_angle = []
+    rows = len(testset)
+    for index in range(rows):
+        x_tst = tf.expand_dims(run[index, :], 0)
+
+        med, std = sample(model, 15, x_tst)
+        predicted_angle.append((med, std))
+
+        # print(index, "/", number_of_rows, " ---------")
+        print("mean", med)
+        print("std", std)
+
+if __name__ == '__main__':
+    test()
