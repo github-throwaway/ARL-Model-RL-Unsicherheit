@@ -22,11 +22,12 @@ class USUCEnv(gym.Env):
     ID = 'USUCEnv-v0'
 
     # TODO: write error message when env not initilaized via reset
+    # TODO: implement as discrete action space
     def __init__(self,
                  noisy_circular_sector=(0, 0.5 * math.pi),
                  noise_offset=0.1,
                  reward_fn: Callable = lambda obs, reward, info, action: reward,
-                 render=False,
+                 render=True,
                  verbose=False):
         """
         **Uncertain SwingUp Cartpole Environment**
