@@ -1,3 +1,6 @@
+import os
+import sys
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -120,9 +123,11 @@ def load():
 
     # TODO: shape[0]?
     model = build(x_train.shape[0])
+    model.summary()
     model = train(model, x_train, y_train)
 
     return NeuralNet(model)
+
 
 def sample(model, size, x_tst):
     yhats = model(x_tst)
@@ -130,6 +135,7 @@ def sample(model, size, x_tst):
     std = yhats.scale
 
     return med, std
+
 
 def test():
     model = load().model
@@ -149,5 +155,23 @@ def test():
         print("mean", med)
         print("std", std)
 
+
+def check_tensorflow():
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    config = tf.compat.v1.ConfigProto()
+
+    if tf.config.list_physical_devices('GPU'):
+        config.gpu_options.per_process_gpu_memory_fraction = 0.95
+        config.gpu_options.visible_device_list = "1"
+
+    tf.compat.v1.Session(config=config)
+
+
 if __name__ == '__main__':
+    print("checking tensorflow installation...")
+    check_tensorflow()
+
+    print("Python Version:", sys.version.replace("\n", ""))
+    print("Tensorflow Version:", tf.version.VERSION)
+
     test()
