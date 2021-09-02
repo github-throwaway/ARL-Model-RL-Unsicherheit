@@ -16,7 +16,7 @@ Sequential = keras.Sequential
 VariableLayer = tfp.layers.VariableLayer
 DistributionLambda = tfp.layers.DistributionLambda
 
-# negative lok likelihood
+# negative log likelihood
 nll = lambda y, p_y: -p_y.log_prob(y)
 
 
