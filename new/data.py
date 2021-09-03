@@ -15,7 +15,7 @@ TIME_SERIES_FILEPATH = "/time_series.csv"
 META_INFO_FILEPATH = "/meta.json"
 
 # types
-Record = namedtuple("Record", "x_pos x_dot theta theta_dot original_angle uncertain")
+Record = namedtuple("Record", "x_pos x_dot theta theta_dot original_angle action uncertain")
 
 
 def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
@@ -29,7 +29,7 @@ def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
     observations, information = usuc.random_actions(env)
 
     # transform collected data to observations (for data consistency)
-    records = [Record(*obs, info["original_angle"], info["uncertain"])
+    records = [Record(*obs, info["original_angle"], info["action"], info["uncertain"])
                for obs, info in zip(observations, information)]
 
     if filename:
@@ -48,6 +48,8 @@ def gen_timeseries(observations: list, time_steps: int, filename: str = None) ->
     :param filename: Optional filename where to store observations
     :return generated list of time series
     """
+
+    # TODO: save action in time series -> save time series values in correct order (move reording into neural net, to decouple)
 
     # use rolling window if size "time_steps" to create time series
     df_obs = pd.DataFrame(observations, columns=['x_pos', 'x_dot', 'theta', 'theta_dot'])
@@ -171,9 +173,9 @@ def plot_angles(original: List[float], observed: List[float], filepath: str = No
 if __name__ == '__main__':
     Config = namedtuple("Config", "env time_steps runs data_dir")
     config = Config(
-        env=usuc.USUCEnv(),
+        env=usuc.USUCEnv(noise_offset=0.5),
         time_steps=5,
-        runs=100,
+        runs=200,
         data_dir="./usuc")
 
     # creating dir
