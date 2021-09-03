@@ -23,6 +23,7 @@ class USUCEnv(gym.Env):
 
     # TODO: write error message when env not initilaized via reset
     # TODO: implement as discrete action space
+    # TODO: user should be able to chooses whether env is continuous or discrete (maybe new class with discrete actions)
     def __init__(self,
                  noisy_circular_sector=(0, 0.5 * math.pi),
                  noise_offset=0.1,
