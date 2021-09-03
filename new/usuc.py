@@ -15,7 +15,7 @@ from gym.envs.registration import register
 # or If you have PyTorch installed:
 # - TorchCartPoleSwingUp-v0,
 # - TorchCartPoleSwingUp-v1
-from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV0 as CartPoleSwingUp
+from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV1 as CartPoleSwingUp
 
 
 class USUCEnv(gym.Env):
