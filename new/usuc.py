@@ -18,6 +18,7 @@ from gym.envs.registration import register
 from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV1 as CartPoleSwingUp
 
 
+# TODO: eventually an action Nothing could help (needs testing)
 class USUCEnv(gym.Env):
     ID = 'USUCEnv-v0'
 
