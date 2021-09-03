@@ -252,6 +252,7 @@ class USUCEnvWithNN(USUCEnv):
         predicted_theta, predicted_std = self.nn.predict(time_series)
 
         # build return values
+        # TODO: build dict to return (ppo can use it)
         predicted_observation = [x_pos, x_dot, predicted_theta, theta_dot]
         new_info = {
             **info,
