@@ -143,7 +143,7 @@ def train(model, x_train, y_train):
     :param y_train: Expected values
     :return: Trained model
     """
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.01), loss=nll)
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss=nll)
     model.fit(x_train, y_train, epochs=1000, verbose=False)
 
     return model
