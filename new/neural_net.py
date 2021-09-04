@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from numpy import genfromtxt
+from itertools import chain
 
 tfd = tfp.distributions
 keras = tf.keras
@@ -29,15 +30,54 @@ class DenseVariational(tfp.layers.DenseVariational):
 
 
 class NeuralNet():
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, model, time_steps):
+        """
 
-    def predict(self, time_series: list) -> tuple:
+        :param model:
+        :param time_steps: Number of time steps for input for prediction
+        """
+        assert time_steps > 0, "Param time_steps must be greater than 0"
+
+        self.model = model
+        self.time_steps = time_steps
+
+    def _transform(self, recent_history, current_action):
+        """
+        # TODO: change doc
+        Reorders values from observation and the action in list to feed neural network with (needs special order)
+        :param observation:
+        :param current_action:
+        :return: Reordered values
+        """
+
+        # TODO: replace with dict calls (everywhere where obs is destructured)
+        # TODO: check if this works correctly
+        # TODO: make destructuring absolute without errors! (maybe assert or smth) -> or give this to neural net which destructures it
+        # reorder values
+        # reorder value function (input must be in special order for nn)
+        reorder = lambda x_pos, x_dot, theta, theta_dot, action: [x_pos, x_dot, theta_dot, action, theta]
+        time_series = [reorder(*obs, action) for (obs, action) in recent_history]
+
+        # flatten
+        time_series = list(chain.from_iterable(time_series))
+
+        # append current action
+        time_series.append(current_action)
+
+        return time_series
+
+    def predict(self, recent_history: list, action) -> tuple:
         """
         Predicts next angle and std for a given time series
-        :param time_series: Time series (Several observations t0, ..., tn)
+        # TODO: reference time_steps set in in init of this NN (used by usuc with NN)
+        :param recent_history: The n recent observations t0, ..., tn)
+        :param action: The current action to transition from tn to tn+1
         :return: predicted angle, predicted std
         """
+
+        # transform recent history and current action to valid input for nn
+        time_series = self._transform(recent_history, action)
+
         # magic
         # TODO: was passiert hier?
         x = tf.expand_dims(time_series, 0)
@@ -123,10 +163,10 @@ def load():
 
     # TODO: shape[0]?
     model = build(x_train.shape[0])
-    model.summary()
     model = train(model, x_train, y_train)
+    model.summary()
 
-    return NeuralNet(model)
+    return NeuralNet(model, 4)
 
 
 def sample(model, size, x_tst):
