@@ -33,7 +33,7 @@ class USUCEnv(gym.Env):
         """
         register(
             cls.ID,
-            entry_point="usuc" + cls.__name__,
+            entry_point="usuc:" + cls.__name__,
         )
         print("registered Uncertain SwingUp Cartpole Env as", cls.ID)
 
@@ -220,8 +220,8 @@ class USUCEnvWithNN(USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
 
     # TODO: rework function signatures regarding params (e.g. init)
-    def __init__(self, nn, reward_fn=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, nn, random_actions, reward_fn=None, **kwargs):
+        super().__init__(random_actions, **kwargs)
 
         # configuration
         self.nn = nn
