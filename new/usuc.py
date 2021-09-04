@@ -2,13 +2,12 @@
 import math
 from collections import namedtuple
 from pprint import pformat
-from typing import Tuple, List, Callable
+from typing import List, Callable
 
 import gym
 import numpy as np
-from gym import spaces
 from gym.envs.registration import register
-
+from gym.spaces import Box, Discrete
 # Could be one of:
 # - CartPoleSwingUp-v0,
 # - CartPoleSwingUp-v1
@@ -39,12 +38,12 @@ class USUCEnv(gym.Env):
         print("registered Uncertain SwingUp Cartpole Env as", cls.ID)
 
     def __init__(
-        self,
-        noisy_circular_sector=(0, 0.5 * math.pi),
-        noise_offset=0.1,
-        reward_fn: Callable = lambda obs, reward, info, action: reward,
-        render=True,
-        verbose=False,
+            self,
+            noisy_circular_sector=(0, 0.5 * math.pi),
+            noise_offset=0.1,
+            reward_fn: Callable = lambda obs, reward, info, action: reward,
+            render=True,
+            verbose=False,
     ):
         """
         **Uncertain SwingUp Cartpole Environment**
@@ -69,7 +68,7 @@ class USUCEnv(gym.Env):
         self.noise_offset = noise_offset
 
         # env configuration
-        self.render = render
+        self._render = render
         self.verbose = verbose
         self.reward_fn = reward_fn
         self.initialized = False
@@ -81,7 +80,7 @@ class USUCEnv(gym.Env):
         # overwrite observation space since we use only 4 dims: x_pos, x_dot, theta, theta_dot
         dims = len(Observation._fields)
         high = np.array([np.finfo(np.float32).max] * dims, dtype=np.float32)
-        self.observation_space = spaces.Box(low=-high, high=high)
+        self.observation_space = Box(low=-high, high=high)
 
     def step(self, action):
         assert (
@@ -148,7 +147,7 @@ class USUCEnv(gym.Env):
             print("fake angle", fake_theta)
             print("observation:", observation)
 
-        return observation._asdict(), reward, done, info
+        return observation, reward, done, info
 
     def reset(self, start_theta: float = None, start_pos: float = None) -> tuple:
         """
@@ -178,7 +177,7 @@ class USUCEnv(gym.Env):
         return self.wrapped_env.state
 
     def render(self, mode="human", **kwargs) -> None:
-        if self.render:
+        if self._render:
             self.wrapped_env.render(mode)
 
     def seed(self, seed=None):
@@ -197,6 +196,7 @@ class USUCDiscreteEnv(USUCEnv):
 
     ID = "USUCEnv-v1"
 
+    # TODO: method signature
     def __init__(self, num_actions, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -205,13 +205,13 @@ class USUCDiscreteEnv(USUCEnv):
         upper_bound = self.action_space.high[0]
         step = abs(lower_bound - upper_bound) / num_actions
         self.actions = list(np.arange(lower_bound, upper_bound, step))
-        self.action_space = spaces.Discrete(len(self.actions))
+        self.action_space = Discrete(len(self.actions))
 
     def step(self, action_index):
         # map action index to action
         action = self.actions[action_index]
 
-        return super().step(action_index)
+        return super().step(action)
 
 
 class USUCEnvWithNN(USUCDiscreteEnv):
@@ -220,7 +220,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
 
     # TODO: rework function signatures regarding params (e.g. init)
-    def __init__(self, nn, step=0.1, reward_fn=None, **kwargs):
+    def __init__(self, nn, reward_fn=None, **kwargs):
         super().__init__(**kwargs)
 
         # configuration
@@ -234,23 +234,21 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
     def step(self, action):
         observation, reward, done, info = super().step(action)
-        recent_history = self.history[-self.nn.time_steps :]
+        recent_history = self.history[-self.nn.time_steps:]
 
         # make prediction
         predicted_theta, predicted_std = self.nn.predict(recent_history, action)
-
-        # update observation with predicted theta
-        # check to remind us to update this piece of code if we switch to cos/sin representation
-        # TODO: remove at the end
-        assert "theta" in observation, "Theta is not defined in observation"
-        observation["theta"] = predicted_theta
-
         info.update(
             {
                 "predicted_theta": predicted_theta,
                 "predicted_std": predicted_std,
             }
         )
+
+        # update observation with predicted theta
+        # check to remind us to update this piece of code if we switch to cos/sin representation
+        assert "theta" in observation, "Theta is not defined in observation"
+        observation = observation._replace(theta=predicted_theta)
 
         # calculate reward based on prediction
         new_reward = self.nn_reward_fn(observation, reward, info, action)
@@ -313,6 +311,7 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
             break
 
     return history
+
 
 if __name__ == "__main__":
     print("USUC - Uncertain SwingUp Cartpole")
