@@ -247,7 +247,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
-        assert "theta" in observation, "Theta is not defined in observation"
+        assert "theta" in Observation._fields, "Theta is not defined in observation"
         observation = observation._replace(theta=predicted_theta)
 
         # calculate reward based on prediction
