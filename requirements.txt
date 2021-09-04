@@ -2,8 +2,8 @@ gym~=0.18.3
 tensorflow==2.5.0
 tensorflow_probability==0.13.0
 pandas==1.2.5
-matplotlib
-numpy
+matplotlib~=3.4.3
+numpy~=1.19.5
 stable-baselines3
 git+git://github.com/micheltokic/marioai/#subdirectory=gym-marioai
 git+git://github.com/angelolovatto/gym-cartpole-swingup
