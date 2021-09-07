@@ -35,7 +35,7 @@ class USUCEnv(gym.Env):
             cls.ID,
             entry_point="usuc:" + cls.__name__,
         )
-        print("registered Uncertain SwingUp Cartpole Env as", cls.ID)
+        print("registered", cls.ID)
 
     def __init__(
             self,
