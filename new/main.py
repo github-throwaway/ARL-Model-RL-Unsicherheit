@@ -10,7 +10,7 @@ import usuc
 
 
 def plot(ground_truths, predictions, upper_border=2 * math.pi, lower_border=0):
-    #    TODO
+    # TODO
     data_dir = "./results"
     pred, std_dev = np.hsplit(predictions, [1])
     # Make sure, pred and std_dev are 1-d Arrays
@@ -19,8 +19,8 @@ def plot(ground_truths, predictions, upper_border=2 * math.pi, lower_border=0):
     std_dev = np.concatenate(std_dev, axis=None)
     fig = plt.figure(figsize=(19, 12))
 
-    plt.plot(ground_truths, label='Ground Truths', color="blue")
-    plt.plot(pred, label='Predictions', color='orange')
+    plt.plot(ground_truths, label="Ground Truths", color="blue")
+    plt.plot(pred, label="Predictions", color="orange")
     """
     higher_dev = [min(p + s, upper_border) for p, s in zip(pred, std_dev)]
     lower_dev = [max(p - s, lower_border) for p, s in zip(pred, std_dev)]
@@ -99,36 +99,63 @@ def a2c_test(env, total_timesteps=25000):
 
 def ppo_nn_env():
     nn = neural_net.load()
-    env = gym.make(usuc.USUCEnvWithNN.ID, nn=nn, render=True, time_steps=4, reward_fn=rf.simple)
+    env = gym.make(
+        usuc.USUCEnvWithNN.ID, nn=nn, random_actions=100, reward_fn=rf.simple
+    )
 
     ppo_test(env)
-    a2c_test(env)
+    # a2c_test(env)
 
 
 def ppo_original_env():
-    from gym_cartpole_swingup.envs.cartpole_swingup import CartPoleSwingUpV1 as CartPoleSwingUp
-    env = CartPoleSwingUp()
+    from gym_cartpole_swingup.envs.cartpole_swingup import (
+        CartPoleSwingUpV1 as CartPoleSwingUp,
+    )
 
+    env = CartPoleSwingUp()
     ppo_test(env)
-    a2c_test(env)
+    # a2c_test(env)
+
+
+def ppo_keep_centered():
+    from gym_cartpole_swingup.envs.cartpole_swingup import (
+        CartPoleSwingUpV1 as CartPoleSwingUp,
+    )
+
+    env = usuc.USUCEnv(reward_fn=rf.centered)
+    ppo_test(env)
+
+
+def ppo_keep_within_boundaries():
+    from gym_cartpole_swingup.envs.cartpole_swingup import (
+        CartPoleSwingUpV1 as CartPoleSwingUp,
+    )
+
+    env = usuc.USUCEnv(reward_fn=rf.boundaries)
+    ppo_test(env)
 
 
 def ppo_uncertainty_env():
     env = usuc.USUCEnv()
 
     ppo_test(env)
-    #a2c_test(env)
+    # a2c_test(env)
 
 
-def run_usuc_with_nn():
-    nn = neural_net.load()
-    reward_fn = lambda _, reward, __, ___: reward
-    env = usuc.USUCEnvWithNN(nn, time_steps=4, reward_fn=reward_fn, render=True)
-    env.reset()
-    usuc.random_actions(env)
+def ppo_discrete_uncertainty_env():
+    env = usuc.USUCDiscreteEnv()
+
+    ppo_test(env)
+    # a2c_test(env)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # x, y = data.load("./usuc")
     usuc.register_envs()
-    ppo_uncertainty_env()
+
+    # ppo_original_env()
+    # ppo_keep_centered()
+    # ppo_keep_within_boundaries()
+    # ppo_uncertainty_env()
+    # ppo_discrete_uncertainty_env()
+    ppo_nn_env()
