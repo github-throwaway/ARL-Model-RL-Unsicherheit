@@ -9,13 +9,12 @@ from uuid import uuid4
 from typing import List
 from collections import namedtuple
 
-
 # path constants
 TIME_SERIES_FILEPATH = "/time_series.csv"
 META_INFO_FILEPATH = "/meta.json"
 
 # types
-Record = namedtuple("Record", "x_pos x_dot theta theta_dot original_angle action uncertain")
+Record = namedtuple("Record", "x_pos x_dot theta theta_dot action original_theta uncertain")
 
 
 def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
@@ -26,11 +25,19 @@ def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
     :return generated records (one record includes observations and info data)
     """
 
-    observations, information = usuc.random_actions(env)
+    history = usuc.random_actions(env)
 
-    # transform collected data to observations (for data consistency)
-    records = [Record(*obs, info["original_angle"], info["action"], info["uncertain"])
-               for obs, info in zip(observations, information)]
+    # transform collected
+    records = [
+        Record(
+            x_pos=obs.x_pos,
+            x_dot=obs.x_dot,
+            theta=obs.theta,
+            theta_dot=obs.theta_dot,
+            action=info["action"],
+            original_theta=info["original_theta"],
+            uncertain=info["uncertain"]
+        ) for (obs, info) in history]
 
     if filename:
         df_obs = pd.DataFrame(records)
@@ -39,7 +46,7 @@ def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
     return records
 
 
-def gen_timeseries(observations: list, time_steps: int, filename: str = None) -> list:
+def gen_timeseries(records: list, time_steps: int, filename: str = None) -> list:
     """
     Generates CSV file for list of time series generated from observations.
     Use ``gen_observations()`` to generate observations.
@@ -48,11 +55,10 @@ def gen_timeseries(observations: list, time_steps: int, filename: str = None) ->
     :param filename: Optional filename where to store observations
     :return generated list of time series
     """
-
-    # TODO: save action in time series -> save time series values in correct order (move reording into neural net, to decouple)
+    # TODO: add warning to be careful <- closely coupled to neural_net
 
     # use rolling window if size "time_steps" to create time series
-    df_obs = pd.DataFrame(observations, columns=['x_pos', 'x_dot', 'theta', 'theta_dot'])
+    df_obs = pd.DataFrame(records, columns=Record._fields)
     windows = [list(win.values) for win in df_obs.rolling(time_steps)]
 
     # drop all windows (at the beginning) which do not have the full size
@@ -76,19 +82,16 @@ def gen(env, time_steps, runs, data_dir):
     time_series_list = []
     for _ in range(runs):
         filename = data_dir + "/" + str(uuid4().time_low)
-        env.reset(usuc.random_start_angle())
+        env.reset(usuc.random_start_theta())
         records = gen_records(env, filename + "-rec.csv")
 
-        # plot angle progression
-        original_angles = [r.original_angle for r in records]
+        # plot theta progression
+        original_angles = [r.original_theta for r in records]
         observed_angles = [r.theta for r in records]
         plot_angles(original_angles, observed_angles, filepath=filename + ".png", show=False)
 
-        # use observation data for time series
-        observations = [[r.x_pos, r.x_dot, r.theta, r.theta_dot] for r in records]
-
         # generate time series list from observations of current run
-        time_series_list.extend(gen_timeseries(observations, time_steps))
+        time_series_list.extend(gen_timeseries(records, time_steps))
 
     # save time series list
     df_tsl = pd.DataFrame(time_series_list)
@@ -100,7 +103,7 @@ def gen(env, time_steps, runs, data_dir):
             "number_of_time_series": len(time_series_list),
             "number_of_runs": runs,
             "time_steps": time_steps,
-            "noisy_circular_sector": env.noisy_circular_sector,
+            "noisy_circular_sector": env.ncs,
             "noise_offset": env.noise_offset,
         }
         json.dump(meta, json_file)
@@ -135,7 +138,7 @@ def load(data_dir: str):
     # currently we only use x_pos and theta in y
     # -> remove columns x_dot (idx: 1) and theta_dot (idx: 3) in y
     y = np.delete(y, [1, 3], 1)
-    
+
     return x, y
 
 
@@ -171,14 +174,12 @@ def plot_angles(original: List[float], observed: List[float], filepath: str = No
 
 
 if __name__ == '__main__':
-    Config = namedtuple("Config", "env time_steps runs data_dir")
-    config = Config(
-        env=usuc.USUCEnv(noise_offset=0.5),
-        time_steps=5,
-        runs=200,
-        data_dir="./usuc")
+    env = usuc.USUCDiscreteEnv(num_actions=10, noise_offset=0.5, render=False)
+    time_steps = 5
+    runs = 200
+    data_dir = "./discrete-usuc"
 
     # creating dir
-    os.mkdir(config.data_dir)
+    os.mkdir(data_dir)
 
-    gen(*config)
+    gen(env, time_steps, runs, data_dir)

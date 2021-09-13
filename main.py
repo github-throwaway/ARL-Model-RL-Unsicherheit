@@ -118,19 +118,11 @@ def ppo_original_env():
 
 
 def ppo_keep_centered():
-    from gym_cartpole_swingup.envs.cartpole_swingup import (
-        CartPoleSwingUpV1 as CartPoleSwingUp,
-    )
-
     env = usuc.USUCEnv(reward_fn=rf.centered)
     ppo_test(env)
 
 
 def ppo_keep_within_boundaries():
-    from gym_cartpole_swingup.envs.cartpole_swingup import (
-        CartPoleSwingUpV1 as CartPoleSwingUp,
-    )
-
     env = usuc.USUCEnv(reward_fn=rf.boundaries)
     ppo_test(env)
 

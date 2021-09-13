@@ -63,14 +63,14 @@ class NeuralNet:
         # TODO: make destructuring absolute without errors! (maybe assert or smth) -> or give this to neural net which destructures it
         # reorder values
         # reorder value function (input must be in special order for nn)
-        reorder = lambda x_pos, x_dot, theta, theta_dot, action: [
-            x_pos,
-            x_dot,
-            theta_dot,
+        reorder = lambda obs, action: [
+            obs.x_pos,
+            obs.x_dot,
+            obs.theta_dot,
             action,
-            theta,
+            obs.theta,
         ]
-        time_series = [reorder(*obs, action) for (obs, action) in recent_history]
+        time_series = [reorder(obs, action) for (obs, action) in recent_history]
 
         # flatten
         time_series = list(chain.from_iterable(time_series))
@@ -265,7 +265,7 @@ def check_tensorflow():
 
 
 def create():
-    model_dir = "./model"
+    model_dir = "model"
     time_steps = 4
     # TODO: replace with data from data generator and transform data to fit input requirements
     training_set = genfromtxt("trainingset.csv", delimiter=",").astype(np.float32)
