@@ -166,4 +166,7 @@ if __name__ == "__main__":
     # ppo_keep_within_boundaries()
     # ppo_uncertainty_env()
     # ppo_discrete_uncertainty_env()
-    nn_test()
+    if args.mode == "test":
+        nn_test()
+    elif args.mode == "train":
+        ppo_nn_env()
