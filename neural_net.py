@@ -1,9 +1,10 @@
 import json
 import os
+
 # disable tf verbose logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
-
+import data
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -25,9 +26,9 @@ DistributionLambda = tfp.layers.DistributionLambda
 # negative log likelihood
 nll = lambda y, p_y: -p_y.log_prob(y)
 
-
 META_INFO_FILEPATH = "/meta.json"
 CHECKPOINT_PATH = "/checkpoint"
+
 
 class DenseVariational(tfp.layers.DenseVariational):
     def get_config(self):
@@ -49,37 +50,6 @@ class NeuralNet:
         self.model = model
         self.time_steps = time_steps
 
-    def _transform(self, recent_history, current_action):
-        """
-        # TODO: change doc
-        Reorders values from observation and the action in list to feed neural network with (needs special order)
-        :param observation:
-        :param current_action:
-        :return: Reordered values
-        """
-
-        # TODO: replace with dict calls (everywhere where obs is destructured)
-        # TODO: check if this works correctly
-        # TODO: make destructuring absolute without errors! (maybe assert or smth) -> or give this to neural net which destructures it
-        # reorder values
-        # reorder value function (input must be in special order for nn)
-        reorder = lambda obs, action: [
-            obs.x_pos,
-            obs.x_dot,
-            obs.theta_dot,
-            action,
-            obs.theta,
-        ]
-        time_series = [reorder(obs, action) for (obs, action) in recent_history]
-
-        # flatten
-        time_series = list(chain.from_iterable(time_series))
-
-        # append current action
-        time_series.append(current_action)
-
-        return time_series
-
     def predict(self, recent_history: list, action) -> tuple:
         """
         Predicts next angle and std for a given time series
@@ -90,7 +60,7 @@ class NeuralNet:
         """
 
         # transform recent history and current action to valid input for nn
-        time_series = self._transform(recent_history, action)
+        time_series = _transform(recent_history, action)
 
         # magic
         # TODO: was passiert hier?
@@ -110,6 +80,38 @@ class NeuralNet:
 
         # med = predicted angle, std = predicted std
         return med, std
+
+
+def _transform(recent_history, current_action):
+    """
+    # TODO: change doc
+    Reorders values from observation and the action in list to feed neural network with (needs special order)
+    :param observation:
+    :param current_action:
+    :return: Reordered values
+    """
+
+    # TODO: replace with dict calls (everywhere where obs is destructured)
+    # TODO: check if this works correctly
+    # TODO: make destructuring absolute without errors! (maybe assert or smth) -> or give this to neural net which destructures it
+    # reorder values
+    # reorder value function (input must be in special order for nn)
+    reorder = lambda obs, action: [
+        obs.x_pos,
+        obs.x_dot,
+        obs.theta_dot,
+        action,
+        obs.theta,
+    ]
+    time_series = [reorder(obs, info["action"]) for (obs, info) in recent_history]
+
+    # flatten
+    time_series = list(chain.from_iterable(time_series))
+
+    # append current action
+    time_series.append(current_action)
+
+    return time_series
 
 
 def build(rows) -> keras.Model:
@@ -214,7 +216,7 @@ def load(model_dir="./model"):
 
     # load latest checkpoint
     latest = tf.train.latest_checkpoint(model_dir)
-    model.load_weights(latest)
+    model.load_weights(latest).expect_partial()
 
     # init net
     net = NeuralNet(model, config["time_steps"])
@@ -248,9 +250,9 @@ def test():
         print("std", std)
 
 
-def evaluate(model):
+def evaluate(model, x_eval, y_eval):
     # Re-evaluate the model
-    loss = model.evaluate(x_test, y_test, verbose=2)
+    loss = model.evaluate(x_eval, y_eval, verbose=2)
 
 
 def check_tensorflow():
@@ -264,30 +266,6 @@ def check_tensorflow():
     tf.compat.v1.Session(config=config)
 
 
-def create():
-    model_dir = "model"
-    time_steps = 4
-    # TODO: replace with data from data generator and transform data to fit input requirements
-    training_set = genfromtxt("trainingset.csv", delimiter=",").astype(np.float32)
-    x_train, y_train = np.hsplit(training_set, [training_set.shape[1] - 1])
-
-    # load test/validation data
-    testset = genfromtxt("testset.csv", delimiter=",").astype(np.float32)
-    x_test, y_test = np.hsplit(testset, [testset.shape[1] - 1])
-
-    model = build(x_train.shape[0])
-    model.summary()
-    train(model_dir, model, x_train, y_train, x_test, y_test)
-
-    # save meta info
-    with open(model_dir + META_INFO_FILEPATH, "w") as json_file:
-        meta = {
-            "rows": x_train.shape[0],
-            "time_steps": time_steps
-        }
-        json.dump(meta, json_file)
-
-
 if __name__ == "__main__":
     print("checking tensorflow installation...")
     check_tensorflow()
@@ -296,14 +274,56 @@ if __name__ == "__main__":
     print("Tensorflow Version:", tf.version.VERSION)
 
     print("building and training network...")
-    create()
+    model_dir = "model"
+    dataset_dir = "./discrete-usuc-dataset"
+    time_sequences, config = data.load(dataset_dir)
 
+    # transform data to fit input requirements
+    # t0_xpos, t0_xdot, t0_thetadot, t0_action, t0_theta, t1_xpos, t1_xdot, t1_thetadot, t1_action, t1_theta,
+    # t2_xpos, t2_xdot, t2_thetadot, t2_action, t2_theta, t3_xpos, t3_xdot, t3_thetadot, t3_action, t3_theta,
+    # t4_action, t4_theta (t4_action = action to get from t3 to t4, t4_theta = predicted theta/otuput/y)
 
+    transformed_dataset = []
+    for ts in time_sequences:
+        output_idx = len(ts) - 1
+        output = ts[output_idx]
+        inputs = ts[:output_idx]
+        _, info = ts[output_idx]
 
+        last_action = output[1]["action"]
+        tts = _transform(inputs, last_action)
 
+        # add output angle
+        output_angle = output[0].theta
+        tts.append(output_angle)
 
+        # append transformed
+        transformed_dataset.append(tts)
 
+    transformed_dataset = np.array(transformed_dataset)
 
+    # split dataset into training, evaluation and test sets
+    # 70% = training set, 20% = evaluation set, 10% = test set
+    size = len(transformed_dataset)
+    split1 = int(size * 0.7)
+    split2 = int(size * (0.7 + 0.2))
+    train_dataset = transformed_dataset[:split1]
+    eval_dataset = transformed_dataset[split1: split2]
+    test_dataset = transformed_dataset[split2:]
 
+    # split dataset into input and output matrix
+    (x_train, y_train) = np.hsplit(train_dataset, [train_dataset.shape[1] - 1])
+    (x_eval, y_eval) = np.hsplit(eval_dataset, [eval_dataset.shape[1] - 1])
+    (x_test, y_test) = np.hsplit(test_dataset, [test_dataset.shape[1] - 1])
 
+    model = build(x_train.shape[0])
+    model.summary()
+    train(model_dir, model, x_train, y_train, x_eval, y_eval)
 
+    # save meta info
+    with open(model_dir + META_INFO_FILEPATH, "w") as json_file:
+        meta = {
+            "rows": x_train.shape[0],
+            "time_steps": config["time_steps"]
+        }
+        json.dump(meta, json_file)
