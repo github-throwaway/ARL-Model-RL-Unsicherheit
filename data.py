@@ -5,7 +5,6 @@ from uuid import uuid4
 import dill
 import gym
 
-import evaluation
 import usuc
 
 # path constants
@@ -70,11 +69,6 @@ def gen(env, time_steps, runs, data_dir):
         filename = data_dir + "/" + str(uuid4().time_low)
         env.reset(usuc.random_start_theta())
         history = gen_history(env, filename + "-rec.p")
-
-        # plot theta progression
-        original_angles = [info["original_theta"] for (_, info) in history]
-        observed_angles = [obs.theta for (obs, _) in history]
-        evaluation.plot_angles(original_angles, observed_angles, filepath=filename + ".png", show=False)
 
         # generate time sequences from history of current run
         windows.extend(gen_time_sequences(history, time_steps))
