@@ -7,3 +7,4 @@ numpy~=1.19.5
 stable-baselines3
 git+git://github.com/micheltokic/marioai/#subdirectory=gym-marioai
 git+git://github.com/angelolovatto/gym-cartpole-swingup
+dill~=0.3.4
