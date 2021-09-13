@@ -9,8 +9,13 @@ pip install -r requirements.txt
 ```
 
 ## How to run
+## Simple
+Uses preconfigured system with trained model and agent with default configuration.
+Simply run `main.py::main` to execute. 
 
-
+### Advanced
+You can also generate your own dataset and train your model with different datasets.
+Please read code.
 
 ## Configuration
 ```
