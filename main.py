@@ -107,6 +107,20 @@ def ppo_nn_env():
     # a2c_test(env)
 
 
+def nn_test():
+    nn = neural_net.load()
+    env = usuc.USUCEnvWithNN(
+        nn=nn,
+        random_actions=100,
+        reward_fn=rf.simple,
+        noise_offset=0,
+    )
+
+    env.reset()
+    history = usuc.random_actions(env)
+    print(history[0])
+
+
 def ppo_original_env():
     from gym_cartpole_swingup.envs.cartpole_swingup import (
         CartPoleSwingUpV1 as CartPoleSwingUp,
@@ -150,4 +164,4 @@ if __name__ == "__main__":
     # ppo_keep_within_boundaries()
     # ppo_uncertainty_env()
     # ppo_discrete_uncertainty_env()
-    ppo_nn_env()
+    nn_test()
