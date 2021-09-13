@@ -7,6 +7,7 @@ from stable_baselines3 import PPO
 import neural_net
 import reward_functions as rf
 import usuc
+import arguments
 
 
 def plot(ground_truths, predictions, upper_border=2 * math.pi, lower_border=0):
@@ -156,6 +157,7 @@ def ppo_discrete_uncertainty_env():
 
 
 if __name__ == "__main__":
+    args = arguments.collect_arguments()
     # x, y = data.load("./usuc")
     usuc.register_envs()
 
