@@ -1,76 +1,61 @@
-import os
 import json
-import itertools
-import usuc
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from uuid import uuid4
 from typing import List
-from collections import namedtuple
+from uuid import uuid4
+
+import dill
+import gym
+
+import evaluation
+import usuc
 
 # path constants
-TIME_SERIES_FILEPATH = "/time_series.csv"
-META_INFO_FILEPATH = "/meta.json"
-
-# types
-Record = namedtuple("Record", "x_pos x_dot theta theta_dot action original_theta uncertain")
+TIME_SEQUENCES_FILEPATH = "/time_sequences.p"
+CONFIG_FILEPATH = "/config.json"
 
 
-def gen_records(env: usuc.USUCEnv, filename: str = None) -> List[Record]:
+def gen_history(env, filename: str = None) -> List[tuple]:
     """
-    Generates CSV file for one run of the USUC env with random actions
-    :param env: Initialize env instance
+    Generates history for one run of a USUC env with random actions.
+    Each time step is represented as a tuple (observation, info dict).
+
+    :param env: Initialized env instance
     :param filename: Optional filename where to store observations
-    :return generated records (one record includes observations and info data)
+    :return: History of random run
     """
 
     history = usuc.random_actions(env)
 
-    # transform collected
-    records = [
-        Record(
-            x_pos=obs.x_pos,
-            x_dot=obs.x_dot,
-            theta=obs.theta,
-            theta_dot=obs.theta_dot,
-            action=info["action"],
-            original_theta=info["original_theta"],
-            uncertain=info["uncertain"]
-        ) for (obs, info) in history]
-
     if filename:
-        df_obs = pd.DataFrame(records)
-        df_obs.to_csv(filename, index=False, header=Record._fields)
+        with open(filename, "wb") as f:
+            dill.dump(history, f)
 
-    return records
+    return history
 
 
-def gen_timeseries(records: list, time_steps: int, filename: str = None) -> list:
+def gen_time_sequences(history: list, time_steps: int, filename: str = None) -> List[List[tuple]]:
     """
-    Generates CSV file for list of time series generated from observations.
-    Use ``gen_observations()`` to generate observations.
-    :param observations: List of observations from one run
-    :param time_steps: Length of one time series
-    :param filename: Optional filename where to store observations
-    :return generated list of time series
+    Generates list of windows (i.e. time sequence) from history.
+
+    Each window contains t_k, t_(k+1),..., t_(time_steps) elements from history
+    where t_(time_steps) is the label/output of the record and t_k, t_(k+1),... are the inputs.
+
+    :param history: History of one run
+    :param time_steps: Number of input observations
+    :param filename: Optional filename where to store time sequences
+
+    :return: List of time sequences (i.e. windows)
     """
-    # TODO: add warning to be careful <- closely coupled to neural_net
 
-    # use rolling window if size "time_steps" to create time series
-    df_obs = pd.DataFrame(records, columns=Record._fields)
-    windows = [list(win.values) for win in df_obs.rolling(time_steps)]
+    # use rolling window of size "time_series_length" to create time sequence
+    windows = []
 
-    # drop all windows (at the beginning) which do not have the full size
-    windows = itertools.dropwhile(lambda w: len(w) < time_steps, windows)
+    for i in range(time_steps, len(history)):
+        windows.append(history[i - time_steps: i + 1])
 
-    # flatten
-    windows = [list(itertools.chain(*win)) for win in windows]
-
-    # save time series list if filename is provided
+    # save time sequences if filename is provided
     if filename:
-        df_obs = pd.DataFrame(windows)
-        df_obs.to_csv(filename, header=None)
+        with open(filename, 'wb') as f:
+            dill.dump(windows, f)
 
     return windows
 
@@ -79,28 +64,30 @@ def gen(env, time_steps, runs, data_dir):
     """"
     Generates USUC dataset
     """
-    time_series_list = []
+
+    windows = []
     for _ in range(runs):
         filename = data_dir + "/" + str(uuid4().time_low)
         env.reset(usuc.random_start_theta())
-        records = gen_records(env, filename + "-rec.csv")
+        history = gen_history(env, filename + "-rec.p")
 
         # plot theta progression
-        original_angles = [r.original_theta for r in records]
-        observed_angles = [r.theta for r in records]
-        plot_angles(original_angles, observed_angles, filepath=filename + ".png", show=False)
+        original_angles = [info["original_theta"] for (_, info) in history]
+        observed_angles = [obs.theta for (obs, _) in history]
+        evaluation.plot_angles(original_angles, observed_angles, filepath=filename + ".png", show=False)
 
-        # generate time series list from observations of current run
-        time_series_list.extend(gen_timeseries(records, time_steps))
+        # generate time sequences from history of current run
+        windows.extend(gen_time_sequences(history, time_steps))
 
-    # save time series list
-    df_tsl = pd.DataFrame(time_series_list)
-    df_tsl.to_csv(data_dir + TIME_SERIES_FILEPATH, index=False, header=None)
+    # save time sequences
+    with open(data_dir + TIME_SEQUENCES_FILEPATH, 'wb') as f:
+        dill.dump(windows, f)
 
     # save meta info
-    with open(data_dir + META_INFO_FILEPATH, "w") as json_file:
+    with open(data_dir + CONFIG_FILEPATH, "w") as json_file:
         meta = {
-            "number_of_time_series": len(time_series_list),
+            "num_time_sequences": len(windows),
+            "num_actions": env.action_space.n if isinstance(env.action_space, gym.spaces.Discrete) else None,
             "number_of_runs": runs,
             "time_steps": time_steps,
             "noisy_circular_sector": env.ncs,
@@ -109,77 +96,34 @@ def gen(env, time_steps, runs, data_dir):
         json.dump(meta, json_file)
 
 
-def load(data_dir: str):
+def load(data_dir: str) -> List[tuple]:
     """
-    Loads a training and test set from the disk
-    :return: ((x_train, y_train), (x_test, y_test))
+    Loads the USUC dataset from given folder
+
+    :param data_dir: Folder of USUC dataset
+    :return: (time sequences, dataset config)
     """
 
     # load meta info
-    with open(data_dir + META_INFO_FILEPATH) as json_file:
-        config = json.load(json_file)
-        print("Using config:", config)
+    with open(data_dir + CONFIG_FILEPATH) as f:
+        config = json.load(f)
 
-    time_steps = config["time_steps"]
+    with open(data_dir + TIME_SEQUENCES_FILEPATH, "rb") as f:
+        windows = dill.load(f)
 
-    # load time series list
-    dataset = np.genfromtxt(data_dir + TIME_SERIES_FILEPATH, delimiter=',').astype(np.float32)
+    return windows, config
 
-    # split datasets into x and y (where y is the last observation)
-    row_len = len(dataset[0])
-    obs_len = int(row_len / time_steps)
-
-    # length check for debugging
-    assert row_len % time_steps == 0, "Length of the row is not a multiple of the length of one observation"
-
-    split_idx = obs_len * (time_steps - 1)
-    x, y = np.hsplit(dataset, [split_idx])
-
-    # currently we only use x_pos and theta in y
-    # -> remove columns x_dot (idx: 1) and theta_dot (idx: 3) in y
-    y = np.delete(y, [1, 3], 1)
-
-    return x, y
-
-
-def plot_angles(original: List[float], observed: List[float], filepath: str = None, show=True) -> None:
-    """
-    Plots the original angles as well as the observed angle in one figure for comparison
-
-    :param original: The original angles
-    :param observed: The observed angles including noise (i.e. with uncertainty)
-    :param filepath: Optional filepath where figure is saved
-    """
-
-    assert len(original) == len(observed), "Length of the lists do not match"
-
-    fig = plt.figure(figsize=(19, 12))
-    plt.title("Angle Progression")
-    plt.xlabel("Time")
-    plt.ylabel("Pole Angle")
-
-    plt.plot(original, 'x', label='Original Angle', color="blue")
-    plt.plot(observed, 'x', label='Observed Angle', color="orange")
-
-    plt.legend()
-    plt.grid()
-
-    if show:
-        plt.show()
-
-    if filepath:
-        plt.savefig(filepath)
-
-    plt.close(fig)
-
-
-if __name__ == '__main__':
-    env = usuc.USUCDiscreteEnv(num_actions=10, noise_offset=0.5, render=False)
-    time_steps = 5
-    runs = 200
-    data_dir = "./discrete-usuc"
-
-    # creating dir
-    os.mkdir(data_dir)
-
-    gen(env, time_steps, runs, data_dir)
+# if __name__ == '__main__':
+#     data_dir = "./discrete-usuc-dataset"
+#     num_actions = 100
+#     noise_offset = 0.5
+#     noisy_circular_sector = (0, math.pi)
+#     time_steps = 4
+#     runs = 200
+#     env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset,
+#                                render=False)
+#
+#     # creating dir
+#     os.mkdir(data_dir)
+#
+#     gen(env, time_steps, runs, data_dir)
