@@ -18,11 +18,14 @@ def collect_arguments():
     parser.add_argument("-l", "--load",         default=False,           type=str2bool, help="Load the weights for the net from disk")
     parser.add_argument("-m", "--mode",         default="test",        type=str,       help='Mode to evaluate (train|test)')
     parser.add_argument("--noise_offset",       default=0.5,            type=int,       help='Define the noise')
+    parser.add_argument("-e", "--epochs",     default=1000,          type=int,       help="Define the number of epochs for the neural net")
+    parser.add_argument("-t", "--timesteps",     default=4,          type=int,       help="Define the number of timesteps for the neural net")
 
     # RL Algorithm Parameters
     parser.add_argument("-a", "--algorithm",    default="ppo",         type=str,       help="Define the algorithm ppo | a2c")
-    parser.add_argument("-e", "--episodes",     default=50000,          type=int,       help="Define the number of episodes")
+    parser.add_argument("--episodes",     default=50000,          type=int,       help="Define the number of episodes")
     parser.add_argument("--gamma",              default=0.995,          type=float,     help="Gamma")
-    parser.add_argument("--batch_size",         default=20240,           type=int,       help="timesteps_per_batch")
-    
+    parser.add_argument("--batch_size",         default=64,           type=int,       help="timesteps_per_batch")
+    parser.add_argument("--learn-rate",         default=3e-4,           type=int,       help="The learning rate for the chosen algorithm")
+
     return parser.parse_args()
