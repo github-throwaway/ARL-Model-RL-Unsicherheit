@@ -20,10 +20,8 @@ from gym_cartpole_swingup.envs import cartpole_swingup
 # TODO: when using cos and sin as angle representation -> adapt reset and step function
 Observation = namedtuple("observation", "x_pos x_dot theta theta_dot")
 
-
+# TODO: add docs
 class USUCEnv(gym.Env):
-    # TODO: add doc this is the discrete env
-
     ID = "USUCEnv-v0"
 
     @classmethod
@@ -237,6 +235,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         recent_history = self.history[-self.nn.time_steps:]
 
         # make prediction
+        # TODO: use values not the array! (example: 'predicted_std': array(18.236517, dtype=float32))
         predicted_theta, predicted_std = self.nn.predict(recent_history, action)
         info.update(
             {
@@ -264,8 +263,8 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         # (where n = self.nn.time_steps)
         for _ in range(self.nn.time_steps):
             action = self.action_space.sample()
-            observation, _, _, _ = super().step(action)
-            self.history.append((observation, action))
+            observation, _, _, info = super().step(action)
+            self.history.append((observation, info))
 
         # return last observation as initial state
         return observation
@@ -311,8 +310,3 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
             break
 
     return history
-
-
-if __name__ == "__main__":
-    print("USUC - Uncertain SwingUp Cartpole")
-    print("Default Configuration:", USUCEnv(), sep="\n")
