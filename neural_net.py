@@ -1,16 +1,17 @@
 import json
 import os
-
-# disable tf verbose logging
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
-import data
+from itertools import chain
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
-
 from numpy import genfromtxt
-from itertools import chain
+
+import data
+
+# disable tf verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 tfd = tfp.distributions
 keras = tf.keras
@@ -75,8 +76,8 @@ class NeuralNet:
         # TODO: log predictions
 
         # extract values from tensors
-        med = backend.eval(np.squeeze(med))
-        std = backend.eval(np.squeeze(std))
+        med = float(backend.eval(np.squeeze(med)))
+        std = float(backend.eval(np.squeeze(std)))
 
         # med = predicted angle, std = predicted std
         return med, std
