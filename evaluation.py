@@ -82,3 +82,37 @@ def plot_predictions():
 
     # plot
     plot(y_test, predictions)
+
+
+
+def plot_test(original: List[float], observed: List[float], predicted: List[float], std: List[float], filepath: str = None, show=True) -> None:
+    """
+    Plots the original angles as well as the observed angle in one figure for comparison
+
+    :param original: The original angles
+    :param observed: The observed angles including noise (i.e. with uncertainty)
+    :param filepath: Optional filepath where figure is saved
+    """
+
+    assert len(original) == len(observed), "Length of the lists do not match"
+
+    fig = plt.figure(figsize=(19, 12))
+    plt.title("Angle Progression")
+    plt.xlabel("Time")
+    plt.ylabel("Pole Angle")
+
+    # plt.plot(original, 'x', label='Original Angle', color="blue")
+    plt.plot(observed, 'x', label='Observed Angle', color="orange")
+    plt.plot(predicted, 'x', label='Predicted Angle', color="green")
+    plt.plot(std, 'x', label="Std", color="red")
+
+    plt.legend()
+    plt.grid()
+
+    if show:
+        plt.show()
+
+    if filepath:
+        plt.savefig(filepath)
+
+    plt.close(fig)
