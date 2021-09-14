@@ -163,9 +163,9 @@ class USUCEnv(gym.Env):
         x_pos, x_dot, theta, theta_dot = self.wrapped_env.state
 
         self.wrapped_env.state = State(
-            start_pos if start_pos else x_pos,
+            start_pos if start_pos is not None else x_pos,
             x_dot,
-            start_theta if start_theta else theta,
+            start_theta if start_theta is not None else theta,
             theta_dot,
         )
 
@@ -208,7 +208,7 @@ class USUCDiscreteEnv(USUCEnv):
     def step(self, action_index):
         # map action index to action
         action = self.actions[action_index]
-
+        #  TODO: overwrite action
         return super().step(action)
 
 
@@ -234,15 +234,22 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         observation, reward, done, info = super().step(action)
         recent_history = self.history[-self.nn.time_steps:]
 
+        real_action = self.actions[action]
+
         # make prediction
         # TODO: use values not the array! (example: 'predicted_std': array(18.236517, dtype=float32))
-        predicted_theta, predicted_std = self.nn.predict(recent_history, action)
+        predicted_theta, predicted_std = self.nn.predict(recent_history, real_action)
         info.update(
             {
+                "observed_theta": observation.theta,
                 "predicted_theta": predicted_theta,
                 "predicted_std": predicted_std,
             }
         )
+
+        # add step to history
+        self.history.append((observation, info))
+
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
