@@ -1,5 +1,3 @@
-import math
-
 from stable_baselines3 import PPO, A2C
 
 import arguments
