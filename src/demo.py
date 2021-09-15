@@ -1,5 +1,7 @@
 import math
-from src import usuc, data
+
+import usuc
+import evaluation
 
 
 def demo_usuc_pole_rotation():
@@ -10,13 +12,13 @@ def demo_usuc_pole_rotation():
     print("=== Angular Progression ===")
     print("Rotates the pole starting from 0° to 360°")
 
-    env = usuc.USUCEnv(render=True)
-    for angle in range(0, 360):
-        env.reset(math.radians(angle), 0)
+    env = usuc.USUCEnv(noisy_circular_sector=(0, 0), noise_offset=0, render=True)
+    for theta in range(0, 360):
+        env.reset(math.radians(theta), 0)
         env.render()
 
-        if angle % 90 == 0:
-            print(f"{angle}° <=> {angle / 180} * pi")
+        if theta % 90 == 0:
+            print(f"{theta}° <=> {theta / 180} * pi")
 
     env.close()
 
@@ -29,7 +31,7 @@ def demo_usuc_random_actions():
     # init with random angle and noisy circular sector
     noisy_circular_sector = (0, math.pi)
     noise_offset = 0.1
-    random_angle = usuc.random_start_angle()
+    random_angle = usuc.random_start_theta()
 
     env = usuc.USUCEnv(
         noisy_circular_sector=noisy_circular_sector,
@@ -48,9 +50,7 @@ def demo_usuc_random_actions():
     env.close()
 
     # plot data
-    original_angles = [info["original_angle"] for (_, info) in history]
-    observed_angles = [obs["theta"] for (obs, _) in history]
-    data.plot_angles(original_angles, observed_angles)
+    evaluation.plot_angles(history)
 
 
 if __name__ == "__main__":
