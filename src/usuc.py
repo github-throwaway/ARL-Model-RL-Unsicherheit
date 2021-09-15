@@ -308,8 +308,6 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
         action = env.action_space.sample()
         obs, reward, done, info = env.step(action)
 
-        info["reward"] = reward
-
         # store data
         history.append((obs, reward, done, info))
 
