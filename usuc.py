@@ -1,4 +1,3 @@
-# coding: utf-8
 import math
 from collections import namedtuple
 from pprint import pformat
@@ -8,19 +7,12 @@ import gym
 import numpy as np
 from gym.envs.registration import register
 from gym.spaces import Box, Discrete
-# Could be one of:
-# - CartPoleSwingUp-v0,
-# - CartPoleSwingUp-v1
-# or If you have PyTorch installed:
-# - TorchCartPoleSwingUp-v0,
-# - TorchCartPoleSwingUp-v1
 from gym_cartpole_swingup.envs import cartpole_swingup
 
 # types
-# TODO: when using cos and sin as angle representation -> adapt reset and step function
 Observation = namedtuple("observation", "x_pos x_dot theta theta_dot")
 
-# TODO: add docs
+
 class USUCEnv(gym.Env):
     ID = "USUCEnv-v0"
 
@@ -37,24 +29,24 @@ class USUCEnv(gym.Env):
 
     def __init__(
             self,
-            noisy_circular_sector=(0, 0.5 * math.pi),
-            noise_offset=0.1,
-            reward_fn: Callable = lambda obs, reward, info, action: reward,
+            noisy_circular_sector,
+            noise_offset,
+            reward_fn: Callable[[Observation, float, dict], float] = lambda obs, reward, info: reward,
             render=True,
-            verbose=False,
     ):
         """
-        **Uncertain SwingUp Cartpole Environment**
-
-        # TODO: rework text, document and test -> how exactly can noise_offset be described?
+        **Continuous Uncertain SwingUp Cartpole Environment**
 
         The boundaries of the noisy circular sector (ncs) must be given as radians with ``ncs[0] < ncs[1]``
         (i.e. start and end of the circular sector)
 
         :param noisy_circular_sector: The circular sector in which the angle should be noisy
-        :param noise_offset: TODO: what exactly does it specify? whats its type/possible values and what do they mean? ^^
+        :param noise_offset: The degree of noise in the noisy area (using normal distribution)
+        :param reward_fn: Optional reward function to calculate reward.
+        If not specified reward of the wrapped env will be returned
+        (params: observation, reward from wrapped env, info object; returns: new reward)
+
         :param render: Specifies whether cartpole should be rendered
-        :param verbose: Specifies whether additional info should be printed
         """
 
         # noise configuration
@@ -67,7 +59,6 @@ class USUCEnv(gym.Env):
 
         # env configuration
         self._render = render
-        self.verbose = verbose
         self.reward_fn = reward_fn
         self.initialized = False
 
@@ -83,26 +74,20 @@ class USUCEnv(gym.Env):
     def step(self, action):
         assert (
             self.initialized
-        ), "Env is not yet initialized, run env.reset() to initialize"
+        ), "Env is not yet initialized. Run env.reset() to initialize"
 
         obs, rew, done, info = self.wrapped_env.step(action)
         x_pos, x_dot, theta_cos, theta_sin, theta_dot = obs
 
-        # transform theta_sin, theta_cos to angle (rad)
-        # TODO: document function calls
+        # transform theta_sin, theta_cos to theta (rad)
         if theta_sin > 0:
             theta = math.acos(theta_cos)
         else:
             theta = math.acos(theta_cos * -1) + math.pi
 
-        # TODO: move jump to bottom
-        # if observation[3]>0:
-        #     pole_angle = (math.acos(observation[2]) + math.pi) % (math.pi*2)
-        # else:
-        #     pole_angle = (math.acos(observation[2]*-1)+math.pi * 2) % (math.pi*2)
-
         # if pole angle is in noisy circular sector -> create noisy fake angle
         fake_theta = None
+        fake_theta_dot = None
         if self.ncs[0] < theta < self.ncs[1]:
             # create fake angle
             rng = np.random.default_rng()
@@ -110,7 +95,6 @@ class USUCEnv(gym.Env):
             fake_theta = theta + noise
 
             # check 0 < fake theta < 2pi and adapt fake theta if necessary
-            # TODO: not necessary when using sin/cos for angle representation
             if not 0 <= fake_theta <= 2 * math.pi:
                 fake_theta = fake_theta - 2 * math.pi * np.sign(fake_theta)
 
@@ -126,7 +110,7 @@ class USUCEnv(gym.Env):
         )
 
         # calculate reward
-        reward = self.reward_fn(observation, rew, info, action)
+        reward = self.reward_fn(observation, rew, info)
 
         # update info object
         info.update(
@@ -136,14 +120,6 @@ class USUCEnv(gym.Env):
                 "action": action,
             }
         )
-
-        # logging
-        if self.verbose:
-            print("=== step ===")
-            print("action:", action)
-            print("original theta:", theta)
-            print("fake angle", fake_theta)
-            print("observation:", observation)
 
         return observation, reward, done, info
 
@@ -160,6 +136,8 @@ class USUCEnv(gym.Env):
 
         # update state of wrapped env
         State = namedtuple("State", "x_pos x_dot theta theta_dot")
+        # check to remind us to update this piece of code if we switch to cos/sin representation
+        assert State._fields == Observation._fields
         x_pos, x_dot, theta, theta_dot = self.wrapped_env.state
 
         self.wrapped_env.state = State(
@@ -168,9 +146,6 @@ class USUCEnv(gym.Env):
             start_theta if start_theta is not None else theta,
             theta_dot,
         )
-
-        if self.verbose:
-            print("initial state:", self.wrapped_env.state)
 
         return self.wrapped_env.state
 
@@ -190,12 +165,17 @@ class USUCEnv(gym.Env):
 
 
 class USUCDiscreteEnv(USUCEnv):
-    # TODO: add doc this is the discrete env
-
     ID = "USUCEnv-v1"
 
-    # TODO: method signature
     def __init__(self, num_actions, *args, **kwargs):
+        """
+        **Discrete Uncertain SwingUp Cartpole Environment**
+
+        Divides the continuous action space of the USUCEnv evenly into `n` discrete actions.
+        See :class:`USUCEnv` for additional parameters.
+
+        :param num_actions: The number of actions used as action space
+        """
         super().__init__(*args, **kwargs)
 
         # convert continuous action space to discrete action space
@@ -205,40 +185,50 @@ class USUCDiscreteEnv(USUCEnv):
         self.actions = list(np.arange(lower_bound, upper_bound, step))
         self.action_space = Discrete(len(self.actions))
 
-    def step(self, action_index):
-        # map action index to action
-        action = self.actions[action_index]
-        #  TODO: overwrite action
-        return super().step(action)
+    def step(self, action: int):
+        # map action to its continuous action value
+        action_value = self.actions[action]
+
+        # calc next step
+        observation, reward, done, info = super().step(action_value)
+
+        # overwrite info.action with action_index since action space is discrete
+        info.update({"action": action})
+
+        return observation, reward, done, info
 
 
 class USUCEnvWithNN(USUCDiscreteEnv):
-    # TODO: add doc this is the discrete env
-
     ID = "USUCEnvWithNN-v0"
 
-    # TODO: rework function signatures regarding params (e.g. init)
-    def __init__(self, nn, random_actions, reward_fn=None, **kwargs):
-        super().__init__(random_actions, **kwargs)
+    def __init__(self, nn, reward_fn: Callable[[Observation, float, dict], float], *args, **kwargs):
+        """
+        **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
+
+        Uses neural net to estimate/predict uncertainty of theta which in turn is used to calculate the reward.
+        See :class:`DiscreteUSUCEnv` and :class:`USUCEnv` for additional parameters.
+
+        :param nn: The neural net used for estimation/prediction
+        :param reward_fn: Required reward function to calculate reward based on predictions of the neural net
+        (params: observation, reward from wrapped env, info object; returns: new reward)
+        """
+        super().__init__(*args, **kwargs)
 
         # configuration
         self.nn = nn
         self.history = []
 
         # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
-        # TODO: define type for reward fn (also in USUCEnv)
-        # TODO: define types
         self.nn_reward_fn = reward_fn
 
     def step(self, action):
         observation, reward, done, info = super().step(action)
-        recent_history = self.history[-self.nn.time_steps:]
 
-        real_action = self.actions[action]
+        # get recent history
+        recent_history = [(obs, info) for (obs, _, __, info) in self.history[-self.nn.time_steps:]]
 
         # make prediction
-        # TODO: use values not the array! (example: 'predicted_std': array(18.236517, dtype=float32))
-        predicted_theta, predicted_std = self.nn.predict(recent_history, real_action)
+        predicted_theta, predicted_std = self.nn.predict(recent_history, action)
         info.update(
             {
                 "observed_theta": observation.theta,
@@ -247,31 +237,31 @@ class USUCEnvWithNN(USUCDiscreteEnv):
             }
         )
 
-        # add step to history
-        self.history.append((observation, info))
-
-
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
         assert "theta" in Observation._fields, "Theta is not defined in observation"
         observation = observation._replace(theta=predicted_theta)
 
         # calculate reward based on prediction
-        new_reward = self.nn_reward_fn(observation, reward, info, action)
+        new_reward = self.nn_reward_fn(observation, reward, info)
+
+        # add step to history
+        self.history.append((observation, new_reward, done, info))
 
         return observation, new_reward, done, info
 
     def reset(self, start_theta: float = None, start_pos: float = None):
         super().reset(start_theta, start_pos)
+        self.history = []
 
         # collect initial observations
         # neural network needs multiple observations for prediction
-        # i.e. we have pre-fill our history with n observations
+        # i.e. we have to pre-fill our history with n observations
         # (where n = self.nn.time_steps)
         for _ in range(self.nn.time_steps):
             action = self.action_space.sample()
-            observation, _, _, info = super().step(action)
-            self.history.append((observation, info))
+            observation, reward, done, info = super().step(action)
+            self.history.append((observation, reward, done, info))
 
         # return last observation as initial state
         return observation
@@ -308,7 +298,9 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
 
         # take random action
         action = env.action_space.sample()
-        obs, _, done, info = env.step(action)
+        obs, reward, done, info = env.step(action)
+
+        info["reward"] = reward
 
         # store data
         history.append((obs, info))
