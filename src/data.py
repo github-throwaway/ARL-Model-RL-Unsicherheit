@@ -112,7 +112,7 @@ def load(data_dir: str) -> List[tuple]:
 #     import os
 #     import math
 #
-#     data_dir = "./discrete-usuc-dataset"
+#     data_dir = "../discrete-usuc-dataset"
 #     num_actions = 100
 #     noise_offset = 0.5
 #     noisy_circular_sector = (0, math.pi)
