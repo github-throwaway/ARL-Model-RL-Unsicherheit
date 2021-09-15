@@ -17,13 +17,13 @@ def discrete_env_with_nn(reward_fn) -> usuc.USUCEnvWithNN:
     :return: Initialized env
     """
     nn = neural_net.load()
-    _, config = data.load("./discrete-usuc-dataset")
+    _, config = data.load("../discrete-usuc-dataset")
 
     ncs = config["noisy_circular_sector"]
 
     return usuc.USUCEnvWithNN(
         nn=nn,
-        random_actions=config["num_actions"],
+        num_actions=config["num_actions"],
         reward_fn=reward_fn,
         noisy_circular_sector=(ncs[0], ncs[1]),
         noise_offset=config["noise_offset"],
@@ -76,7 +76,7 @@ def cli():
 
 def main():
     import dill
-    env = discrete_env_with_nn(rf.simple())
+    env = discrete_env_with_nn(rf.simple)
     agent = ppo(env, total_timesteps=500000)
     history = run(agent, env)
 
