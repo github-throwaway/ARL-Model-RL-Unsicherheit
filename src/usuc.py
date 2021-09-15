@@ -10,7 +10,7 @@ from gym.spaces import Box, Discrete
 from gym_cartpole_swingup.envs import cartpole_swingup
 
 # types
-Observation = namedtuple("observation", "x_pos x_dot theta theta_dot")
+Observation = namedtuple("observation", "x_pos x_dot theta_sin theta_cos theta_dot")
 
 
 class USUCEnv(gym.Env):
@@ -51,7 +51,7 @@ class USUCEnv(gym.Env):
 
         # noise configuration
         ncs_start, ncs_end = noisy_circular_sector
-        assert 0 <= ncs_start < ncs_end <= 2 * math.pi
+        assert 0 <= ncs_start <= ncs_end <= 2 * math.pi
         assert noise_offset >= 0
 
         self.ncs = (ncs_start, ncs_end)
@@ -66,46 +66,47 @@ class USUCEnv(gym.Env):
         self.wrapped_env = cartpole_swingup.CartPoleSwingUpV1()
         self.action_space = self.wrapped_env.action_space
 
-        # overwrite observation space since we use only 4 dims: x_pos, x_dot, theta, theta_dot
-        dims = len(Observation._fields)
-        high = np.array([np.finfo(np.float32).max] * dims, dtype=np.float32)
-        self.observation_space = Box(low=-high, high=high)
-
     def step(self, action):
         assert (
             self.initialized
         ), "Env is not yet initialized. Run env.reset() to initialize"
 
         obs, rew, done, info = self.wrapped_env.step(action)
-        x_pos, x_dot, theta_cos, theta_sin, theta_dot = obs
+        x_pos, x_dot, original_theta_cos, original_theta_sin, theta_dot = obs
 
         # transform theta_sin, theta_cos to theta (rad)
-        if theta_sin > 0:
-            theta = math.acos(theta_cos)
+        if original_theta_sin > 0:
+            original_theta = math.acos(original_theta_cos)
         else:
-            theta = math.acos(theta_cos * -1) + math.pi
+            original_theta = math.acos(original_theta_cos * -1) + math.pi
 
         # if pole angle is in noisy circular sector -> create noisy fake angle
         fake_theta = None
         fake_theta_dot = None
-        if self.ncs[0] < theta < self.ncs[1]:
+        if self.ncs[0] < original_theta < self.ncs[1]:
             # create fake angle
             rng = np.random.default_rng()
             noise = rng.normal(scale=self.noise_offset)
-            fake_theta = theta + noise
+            fake_theta = original_theta + noise
 
             # check 0 < fake theta < 2pi and adapt fake theta if necessary
             if not 0 <= fake_theta <= 2 * math.pi:
                 fake_theta = fake_theta - 2 * math.pi * np.sign(fake_theta)
 
             # adapt theta_dot
-            fake_theta_dot = theta_dot + noise * 100 - (theta - fake_theta)
+            fake_theta_dot = theta_dot + noise * 100 - (original_theta - fake_theta)
+
+        # transform theta back to theta_sin and theta_cos
+        theta = fake_theta if fake_theta else original_theta
+        theta_sin = math.sin(theta)
+        theta_cos = math.cos(theta)
 
         # build new observation
         observation = Observation(
             x_pos=x_pos,
             x_dot=x_dot,
-            theta=fake_theta if fake_theta else theta,
+            theta_sin=theta_sin,
+            theta_cos=theta_cos,
             theta_dot=fake_theta_dot if fake_theta else theta_dot,
         )
 
@@ -116,7 +117,10 @@ class USUCEnv(gym.Env):
         info.update(
             {
                 "uncertain": fake_theta is not None,
-                "original_theta": theta,
+                "observed_theta": theta,
+                "original_theta": original_theta,
+                "original_theta_sin": original_theta_sin,
+                "original_theta_cos": original_theta_cos,
                 "action": action,
             }
         )
@@ -136,8 +140,6 @@ class USUCEnv(gym.Env):
 
         # update state of wrapped env
         State = namedtuple("State", "x_pos x_dot theta theta_dot")
-        # check to remind us to update this piece of code if we switch to cos/sin representation
-        assert State._fields == Observation._fields
         x_pos, x_dot, theta, theta_dot = self.wrapped_env.state
 
         self.wrapped_env.state = State(
@@ -147,7 +149,13 @@ class USUCEnv(gym.Env):
             theta_dot,
         )
 
-        return self.wrapped_env.state
+        return Observation(
+            x_pos=x_pos,
+            x_dot=x_dot,
+            theta_sin=math.sin(theta),
+            theta_cos=math.cos(theta),
+            theta_dot=theta_dot
+        )
 
     def render(self, mode="human", **kwargs) -> None:
         if self._render:
@@ -216,7 +224,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
         # configuration
         self.nn = nn
-        self.history = []
+        self._history = []
 
         # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
         self.nn_reward_fn = reward_fn
@@ -225,13 +233,14 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         observation, reward, done, info = super().step(action)
 
         # get recent history
-        recent_history = [(obs, info) for (obs, _, __, info) in self.history[-self.nn.time_steps:]]
+        recent_history = [(obs, info) for (obs, _, _, info) in self._history[-self.nn.time_steps:]]
 
         # make prediction
         predicted_theta, predicted_std = self.nn.predict(recent_history, action)
         info.update(
             {
-                "observed_theta": observation.theta,
+                "observed_theta_sin": observation.theta_sin,
+                "observed_theta_cos": observation.theta_cos,
                 "predicted_theta": predicted_theta,
                 "predicted_std": predicted_std,
             }
@@ -239,20 +248,19 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
-        assert "theta" in Observation._fields, "Theta is not defined in observation"
-        observation = observation._replace(theta=predicted_theta)
+        observation = observation._replace(theta_sin=predicted_theta.sin, theta_cos=predicted_theta.cos)
 
         # calculate reward based on prediction
         new_reward = self.nn_reward_fn(observation, reward, info)
 
         # add step to history
-        self.history.append((observation, new_reward, done, info))
+        self._history.append((observation, new_reward, done, info))
 
         return observation, new_reward, done, info
 
     def reset(self, start_theta: float = None, start_pos: float = None):
         super().reset(start_theta, start_pos)
-        self.history = []
+        self._history = []
 
         # collect initial observations
         # neural network needs multiple observations for prediction
@@ -261,7 +269,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         for _ in range(self.nn.time_steps):
             action = self.action_space.sample()
             observation, reward, done, info = super().step(action)
-            self.history.append((observation, reward, done, info))
+            self._history.append((observation, reward, done, info))
 
         # return last observation as initial state
         return observation
@@ -303,7 +311,7 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
         info["reward"] = reward
 
         # store data
-        history.append((obs, info))
+        history.append((obs, reward, done, info))
 
         if done:
             break
