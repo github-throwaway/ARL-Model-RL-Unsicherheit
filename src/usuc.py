@@ -65,6 +65,7 @@ class USUCEnv(gym.Env):
         # wrapped env references
         self.wrapped_env = cartpole_swingup.CartPoleSwingUpV1()
         self.action_space = self.wrapped_env.action_space
+        self.observation_space = self.wrapped_env.observation_space
 
     def step(self, action):
         assert (
@@ -233,7 +234,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         observation, reward, done, info = super().step(action)
 
         # get recent history
-        recent_history = [(obs, info) for (obs, _, _, info) in self._history[-self.nn.time_steps:]]
+        recent_history = self._history[-self.nn.time_steps:]
 
         # make prediction
         predicted_theta, predicted_std = self.nn.predict(recent_history, action)
