@@ -14,7 +14,7 @@ def collect_arguments():
     
     # program arguments
     parser.add_argument("-n", "--env_name",     default="USUCEnv-v0",  type=str,       help="Define the environment. USUCEnv-v0 | USUCEnv-v1 | USUCEnvWithNN-v0")
-    parser.add_argument("-g", "--graphics",     default=False,          type=str2bool,  help="Define if the env should render")
+    parser.add_argument("-r", "--render",     default=False,          type=str2bool,  help="Define if the env should render")
     parser.add_argument("-l", "--load",         default=False,           type=str2bool, help="Load the weights for the net from disk")
     parser.add_argument("-m", "--mode",         default="test",        type=str,       help='Mode to evaluate (train|test)')
     parser.add_argument("--noise_offset",       default=0.5,            type=int,       help='Define the noise')
