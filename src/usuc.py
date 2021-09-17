@@ -83,7 +83,6 @@ class USUCEnv(gym.Env):
 
         # if pole angle is in noisy circular sector -> create noisy fake angle
         fake_theta = None
-        fake_theta_dot = None
         if self.ncs[0] < original_theta < self.ncs[1]:
             # create fake angle
             rng = np.random.default_rng()
@@ -93,9 +92,6 @@ class USUCEnv(gym.Env):
             # check 0 < fake theta < 2pi and adapt fake theta if necessary
             if not 0 <= fake_theta <= 2 * math.pi:
                 fake_theta = fake_theta - 2 * math.pi * np.sign(fake_theta)
-
-            # adapt theta_dot
-            fake_theta_dot = theta_dot + noise * 100 - (original_theta - fake_theta)
 
         # transform theta back to theta_sin and theta_cos
         theta = fake_theta if fake_theta else original_theta
@@ -108,7 +104,7 @@ class USUCEnv(gym.Env):
             x_dot=x_dot,
             theta_sin=theta_sin,
             theta_cos=theta_cos,
-            theta_dot=fake_theta_dot if fake_theta else theta_dot,
+            theta_dot=theta_dot,
         )
 
         # calculate reward
