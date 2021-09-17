@@ -2,8 +2,10 @@ import json
 from typing import List
 from uuid import uuid4
 
+import shutil
 import dill
 import gym
+from tqdm import tqdm
 
 import usuc
 
@@ -59,13 +61,30 @@ def gen_time_sequences(history: list, time_steps: int, filename: str = None) -> 
     return windows
 
 
-def gen(env, time_steps, runs, data_dir):
+def gen():
     """"
     Generates USUC dataset
     """
+    import os
+    import math
 
+    data_dir = "../discrete-usuc-dataset"
+    runs = 1000
+    num_actions = 100
+    noise_offset = 0.5
+    noisy_circular_sector = (0, math.pi)
+    time_steps = 4
+    env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset,
+                               render=False)
+
+    # creating empty dir (overwrites dir if it already exists)
+    shutil.rmtree(data_dir, ignore_errors=True)
+    os.makedirs(dir)
+
+    # generationg dataset
+    print("generating dataset...")
     windows = []
-    for _ in range(runs):
+    for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
         env.reset(usuc.random_start_theta())
         history = gen_history(env, filename + "-rec.p")
@@ -74,10 +93,12 @@ def gen(env, time_steps, runs, data_dir):
         windows.extend(gen_time_sequences(history, time_steps))
 
     # save time sequences
+    print(f"saving time sequences in {TIME_SEQUENCES_FILEPATH} (this may take a while)")
     with open(data_dir + TIME_SEQUENCES_FILEPATH, 'wb') as f:
         dill.dump(windows, f)
 
     # save meta info
+    print(f"saving meta info in {CONFIG_FILEPATH}")
     with open(data_dir + CONFIG_FILEPATH, "w") as json_file:
         meta = {
             "num_time_sequences": len(windows),
@@ -109,19 +130,4 @@ def load(data_dir: str) -> List[tuple]:
 
 
 # if __name__ == '__main__':
-#     import os
-#     import math
-#
-#     data_dir = "../discrete-usuc-dataset"
-#     num_actions = 100
-#     noise_offset = 0.5
-#     noisy_circular_sector = (0, math.pi)
-#     time_steps = 4
-#     runs = 200
-#     env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset,
-#                                render=False)
-#
-#     # creating dir
-#     os.mkdir(data_dir)
-#
-#     gen(env, time_steps, runs, data_dir)
+#     gen()
