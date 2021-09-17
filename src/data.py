@@ -73,7 +73,7 @@ def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     """
 
     # generating dataset
-    print(f"collecting data from {runs} runs... (saving history for each run in {data_dir})")
+    print(f"collecting data from {runs} runs (saving history for each run in {data_dir})")
     windows = []
     for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
