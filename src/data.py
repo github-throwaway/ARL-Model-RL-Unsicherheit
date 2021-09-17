@@ -61,27 +61,18 @@ def gen_time_sequences(history: list, time_steps: int, filename: str = None) -> 
     return windows
 
 
-def gen():
+def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     """"
     Generates USUC dataset
+
+    :param env: USUCEnv instance
+    :param runs: Number of env runs from which to collect data (impacts size of the dataset)
+    :param time_steps: Number of time steps of the generated time sequences
+    :param data_dir: Folder in which the data should be saved
+
     """
-    import os
-    import math
 
-    data_dir = "../discrete-usuc-dataset"
-    runs = 1000
-    num_actions = 100
-    noise_offset = 0.5
-    noisy_circular_sector = (0, math.pi)
-    time_steps = 4
-    env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset,
-                               render=False)
-
-    # creating empty dir (overwrites dir if it already exists)
-    shutil.rmtree(data_dir, ignore_errors=True)
-    os.makedirs(data_dir)
-
-    # generationg dataset
+    # generating dataset
     print(f"collecting data from {runs} runs... (saving history for each run in {data_dir})")
     windows = []
     for _ in tqdm(range(runs)):
@@ -132,4 +123,23 @@ def load(data_dir: str) -> List[tuple]:
 
 
 if __name__ == '__main__':
-    gen()
+    import os
+    import math
+
+    # env config
+    num_actions = 100
+    noise_offset = 0.5
+    noisy_circular_sector = (0, math.pi)
+
+    # generator config
+    data_dir = "../discrete-usuc-dataset"
+    runs = 1000
+    time_steps = 4
+
+    # creating empty dir (overwrites dir if it already exists)
+    shutil.rmtree(data_dir, ignore_errors=True)
+    os.makedirs(data_dir)
+
+    # run generator
+    env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset, render=False)
+    gen(env, runs, time_steps, data_dir)
