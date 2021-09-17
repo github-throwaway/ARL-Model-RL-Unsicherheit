@@ -82,7 +82,7 @@ def gen():
     os.makedirs(data_dir)
 
     # generationg dataset
-    print("generating dataset...")
+    print(f"collecting data from {runs} runs... (saving history for each run in {data_dir})")
     windows = []
     for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
@@ -93,13 +93,15 @@ def gen():
         windows.extend(gen_time_sequences(history, time_steps))
 
     # save time sequences
-    print(f"saving time sequences in {TIME_SEQUENCES_FILEPATH} (this may take a while)")
-    with open(data_dir + TIME_SEQUENCES_FILEPATH, 'wb') as f:
+    time_sequences_file = data_dir + TIME_SEQUENCES_FILEPATH
+    print(f"saving time sequences to {time_sequences_file} (this may take a while)")
+    with open(time_sequences_file, 'wb') as f:
         dill.dump(windows, f)
 
     # save meta info
-    print(f"saving meta info in {CONFIG_FILEPATH}")
-    with open(data_dir + CONFIG_FILEPATH, "w") as json_file:
+    meta_info_file = data_dir + CONFIG_FILEPATH
+    print(f"saving meta info to {meta_info_file}")
+    with open(meta_info_file, "w") as json_file:
         meta = {
             "num_time_sequences": len(windows),
             "num_actions": env.action_space.n if isinstance(env.action_space, gym.spaces.Discrete) else None,
@@ -129,5 +131,5 @@ def load(data_dir: str) -> List[tuple]:
     return windows, config
 
 
-# if __name__ == '__main__':
-#     gen()
+if __name__ == '__main__':
+    gen()
