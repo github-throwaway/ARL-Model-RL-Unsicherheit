@@ -1,6 +1,9 @@
 from typing import List
 import math
 import matplotlib.pyplot as plt
+import numpy as np
+import os
+from data import gen
 
 
 def plot_angles(original: List[float], observed: List[float], filepath: str = None, show=True) -> None:
@@ -85,6 +88,13 @@ def plot_predictions():
 
 
 def plot_summary(observation, info, filename):
+    """
+    Plots the original angles as well as the observed angle in one figure for comparison
+
+    :param original: The original angles
+    :param observed: The observed angles including noise (i.e. with uncertainty)
+    :param filepath: Optional filepath where figure is saved
+    """
     x_pos, x_dot, theta_sin, theta_cos, theta_dot = observation
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
     ax1.set_title('Sine')
