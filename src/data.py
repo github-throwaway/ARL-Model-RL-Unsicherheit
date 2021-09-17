@@ -79,7 +79,7 @@ def gen():
 
     # creating empty dir (overwrites dir if it already exists)
     shutil.rmtree(data_dir, ignore_errors=True)
-    os.makedirs(dir)
+    os.makedirs(data_dir)
 
     # generationg dataset
     print("generating dataset...")
