@@ -15,7 +15,7 @@ TIME_SEQUENCES_FILEPATH = "/time_sequences.p"
 CONFIG_FILEPATH = "/config.json"
 
 
-def gen_history(env, filename: str = None) -> List[tuple]:
+def _gen_history(env, filename: str = None) -> List[tuple]:
     """
     Generates history for one run of a USUC env with random actions.
     Each time step is represented as a tuple (observation, info dict).
@@ -34,7 +34,7 @@ def gen_history(env, filename: str = None) -> List[tuple]:
     return history
 
 
-def gen_time_sequences(history: list, time_steps: int, filename: str = None) -> List[List[tuple]]:
+def _gen_time_sequences(history: list, time_steps: int, filename: str = None) -> List[List[tuple]]:
     """
     Generates list of windows (i.e. time sequence) from history.
 
@@ -79,10 +79,10 @@ def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
         env.reset(utils.random_start_theta())
-        history = gen_history(env, filename + "-rec.p")
+        history = _gen_history(env, filename + "-rec.p")
 
         # generate time sequences from history of current run
-        windows.extend(gen_time_sequences(history, time_steps))
+        windows.extend(_gen_time_sequences(history, time_steps))
 
     # save time sequences
     time_sequences_file = data_dir + TIME_SEQUENCES_FILEPATH
