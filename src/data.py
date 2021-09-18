@@ -1,14 +1,14 @@
 import json
+import shutil
 from typing import List
 from uuid import uuid4
 
-import shutil
 import dill
 import gym
 from tqdm import tqdm
 
-import utils
 import usuc
+import utils
 
 # path constants
 TIME_SEQUENCES_FILEPATH = "/time_sequences.p"
