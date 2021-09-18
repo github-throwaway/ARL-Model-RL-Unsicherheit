@@ -7,6 +7,7 @@ import dill
 import gym
 from tqdm import tqdm
 
+import utils
 import usuc
 
 # path constants
@@ -24,7 +25,7 @@ def gen_history(env, filename: str = None) -> List[tuple]:
     :return: History of random run
     """
 
-    history = usuc.random_actions(env)
+    history = utils.random_actions(env)
 
     if filename:
         with open(filename, "wb") as f:
@@ -77,7 +78,7 @@ def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     windows = []
     for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
-        env.reset(usuc.random_start_theta())
+        env.reset(utils.random_start_theta())
         history = gen_history(env, filename + "-rec.p")
 
         # generate time sequences from history of current run
@@ -104,7 +105,7 @@ def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
         json.dump(meta, json_file)
 
 
-def load(data_dir: str) -> List[tuple]:
+def load(data_dir: str) -> tuple:
     """
     Loads the USUC dataset from given folder
 
