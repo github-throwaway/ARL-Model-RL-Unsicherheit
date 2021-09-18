@@ -1,13 +1,15 @@
 import math
 from collections import namedtuple
 from pprint import pformat
-from typing import List, Callable
+from typing import Callable
 
 import gym
 import numpy as np
 from gym.envs.registration import register
-from gym.spaces import Box, Discrete
+from gym.spaces import Discrete
 from gym_cartpole_swingup.envs import cartpole_swingup
+
+import utils
 
 # types
 Observation = namedtuple("observation", "x_pos x_dot theta_sin theta_cos theta_dot")
@@ -76,10 +78,7 @@ class USUCEnv(gym.Env):
         x_pos, x_dot, original_theta_cos, original_theta_sin, theta_dot = obs
 
         # transform theta_sin, theta_cos to theta (rad)
-        if original_theta_sin > 0:
-            original_theta = math.acos(original_theta_cos)
-        else:
-            original_theta = math.acos(original_theta_cos * -1) + math.pi
+        original_theta = utils.calc_theta(original_theta_sin, original_theta_cos)
 
         # if pole angle is in noisy circular sector -> create noisy fake angle
         fake_theta = None
@@ -203,75 +202,6 @@ class USUCDiscreteEnv(USUCEnv):
         return observation, reward, done, info
 
 
-class USUCEnvWithNN(USUCDiscreteEnv):
-    ID = "USUCEnvWithNN-v0"
-
-    def __init__(self, nn, reward_fn: Callable[[Observation, float, dict], float], *args, **kwargs):
-        """
-        **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
-
-        Uses neural net to estimate/predict uncertainty of theta which in turn is used to calculate the reward.
-        See :class:`DiscreteUSUCEnv` and :class:`USUCEnv` for additional parameters.
-
-        :param nn: The neural net used for estimation/prediction
-        :param reward_fn: Required reward function to calculate reward based on predictions of the neural net
-        (params: observation, reward from wrapped env, info object; returns: new reward)
-        """
-        super().__init__(*args, **kwargs)
-
-        # configuration
-        self.nn = nn
-        self._history = []
-
-        # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
-        self.nn_reward_fn = reward_fn
-
-    def step(self, action):
-        observation, reward, done, info = super().step(action)
-
-        # get recent history
-        recent_history = self._history[-self.nn.time_steps:]
-
-        # make prediction
-        predicted_theta, predicted_std = self.nn.predict(recent_history, action)
-        info.update(
-            {
-                "observed_theta_sin": observation.theta_sin,
-                "observed_theta_cos": observation.theta_cos,
-                "predicted_theta": predicted_theta,
-                "predicted_std": predicted_std,
-            }
-        )
-
-        # update observation with predicted theta
-        # check to remind us to update this piece of code if we switch to cos/sin representation
-        observation = observation._replace(theta_sin=predicted_theta.sin, theta_cos=predicted_theta.cos)
-
-        # calculate reward based on prediction
-        new_reward = self.nn_reward_fn(observation, reward, info)
-
-        # add step to history
-        self._history.append((observation, new_reward, done, info))
-
-        return observation, new_reward, done, info
-
-    def reset(self, start_theta: float = None, start_pos: float = None):
-        super().reset(start_theta, start_pos)
-        self._history = []
-
-        # collect initial observations
-        # neural network needs multiple observations for prediction
-        # i.e. we have to pre-fill our history with n observations
-        # (where n = self.nn.time_steps)
-        for _ in range(self.nn.time_steps):
-            action = self.action_space.sample()
-            observation, reward, done, info = super().step(action)
-            self._history.append((observation, reward, done, info))
-
-        # return last observation as initial state
-        return observation
-
-
 def register_envs() -> None:
     """
     Registers the gyms USUCEnv, USUCDiscreteEnv and USUCEnvWithNN
@@ -279,36 +209,3 @@ def register_envs() -> None:
 
     USUCEnv.register()
     USUCDiscreteEnv.register()
-    USUCEnvWithNN.register()
-
-
-def random_start_theta() -> float:
-    """Returns random start angle"""
-    start_theta = np.random.uniform(0.0, 2.0 * np.pi)
-
-    return start_theta
-
-
-def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
-    """
-    Run env with random actions until max_steps or done = True
-    :param env: The env used by the "agent"
-    :param max_steps: Max steps for one run
-    :return: List of tuples with tuple = (obs, info) for one step
-    """
-
-    history = []
-    for _ in range(max_steps):
-        env.render()
-
-        # take random action
-        action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
-
-        # store data
-        history.append((obs, reward, done, info))
-
-        if done:
-            break
-
-    return history
