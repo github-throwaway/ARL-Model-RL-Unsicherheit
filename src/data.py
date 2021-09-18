@@ -127,13 +127,13 @@ if __name__ == '__main__':
     import math
 
     # env config
-    num_actions = 100
-    noise_offset = 0.5
+    num_actions = 10
+    noise_offset = 0.3
     noisy_circular_sector = (0, math.pi)
 
     # generator config
     data_dir = "../discrete-usuc-dataset"
-    runs = 1000
+    runs = 900
     time_steps = 4
 
     # creating empty dir (overwrites dir if it already exists)
@@ -142,4 +142,5 @@ if __name__ == '__main__':
 
     # run generator
     env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset, render=False)
+
     gen(env, runs, time_steps, data_dir)
