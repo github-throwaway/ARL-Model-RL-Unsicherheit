@@ -41,7 +41,6 @@ def best(obs, reward, info):
     x_pos = obs.x_pos
 
     x_pos_rew = (max(abs(x_pos) - 1, 0) )**2
-    print(x_pos_rew)
 
     theta_cos = obs.theta_cos
     theta_sin = obs.theta_sin
