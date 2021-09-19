@@ -1,8 +1,18 @@
 import math
 
-import usuc
+import agents
 import evaluation
+import usuc
+import utils
 
+
+def demo_noisy_env():
+
+    #
+    env = usuc.USUCEnv(noise_offset=0.3, noisy_circular_sector=(math.pi, 2 * math.pi))
+    ppo = agents.create("ppo", env)
+    agents.train(ppo, total_timesteps=80000)
+    agents.run(ppo, env, 10)
 
 def demo_usuc_pole_rotation():
     """
@@ -30,10 +40,11 @@ def demo_usuc_random_actions():
 
     # init with random angle and noisy circular sector
     noisy_circular_sector = (0, math.pi)
-    noise_offset = 0.1
-    random_angle = usuc.random_start_theta()
+    noise_offset = 0.3
+    random_angle = utils.random_start_theta()
 
-    env = usuc.USUCEnv(
+    env = usuc.USUCDiscreteEnv(
+        num_actions=10,
         noisy_circular_sector=noisy_circular_sector,
         noise_offset=noise_offset,
         render=True,
@@ -46,7 +57,7 @@ def demo_usuc_random_actions():
     print("- Noise Offset:", noise_offset)
     print("- Random Angle:", random_angle)
 
-    history = usuc.random_actions(env)
+    history = src.utils.random_actions(env)
     env.close()
 
     # plot data
@@ -56,3 +67,4 @@ def demo_usuc_random_actions():
 if __name__ == "__main__":
     demo_usuc_pole_rotation()
     demo_usuc_random_actions()
+    demo_noisy_env()

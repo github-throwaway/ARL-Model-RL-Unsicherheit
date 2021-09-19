@@ -83,6 +83,7 @@ def generate_model():
                 losses.append(loss)
                 new_epoch = False
 
+
     plt.plot(losses, "x", label="losses")
     plt.show()
 

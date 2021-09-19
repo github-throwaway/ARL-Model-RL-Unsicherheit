@@ -1,9 +1,7 @@
-import math
 from collections import namedtuple
 from itertools import chain
 from typing import Callable
 
-import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
@@ -12,9 +10,6 @@ import usuc
 from usuc import USUCDiscreteEnv, Observation
 
 # types
-
-ACTIONS = USUCDiscreteEnv(num_actions=10, noise_offset=0.3, noisy_circular_sector=(0, math.pi)).actions
-
 Prediction = namedtuple("Prediction", "theta_sin, std_sin, theta_cos, std_cos")
 
 
@@ -29,7 +24,7 @@ class NeuralNet:
 
         self.model = model
         self.time_steps = time_steps
-        self._samples = samples
+        self.samples = samples
 
     def predict(self, recent_history: list, action) -> tuple:
         """
@@ -46,7 +41,8 @@ class NeuralNet:
 
         # make prediction
         x = transform(recent_history, action)
-        pred = Prediction(self.sample(x))
+        x = torch.tensor(x).float()
+        pred = self.sample(x)
 
         return pred
 
@@ -55,13 +51,14 @@ class NeuralNet:
         preds = torch.stack(preds)
         means = preds.mean(axis=0).detach().numpy()
         stds = preds.std(axis=0).detach().numpy()
-        theta_sin = means[0][0]
-        theta_cos = means[0][1]
 
-        std_sin = stds[0][0]
-        std_cos = stds[0][1]
+        theta_sin = means[0]
+        theta_cos = means[1]
 
-        return theta_sin, std_sin, theta_cos, std_cos
+        std_sin = stds[0]
+        std_cos = stds[1]
+
+        return Prediction(theta_sin, std_sin, theta_cos, std_cos)
 
 
 def transform(recent_history, current_action):
@@ -140,15 +137,6 @@ def dataloaders(x_train, y_train, x_test, y_test):
     return dataloader_train, dataloader_test
 
 
-def load(filepath):
-    """
-    Load model
-
-    :param filepath: Filepath where model is located
-    :return: Model
-    """
-    return torch.load(filepath)
-
 
 class USUCEnvWithNN(USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
@@ -194,7 +182,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
-        observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
+        new_observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
 
         # calculate reward based on prediction
         new_reward = self.nn_reward_fn(observation, reward, info)
@@ -202,7 +190,7 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         # add step to history
         self._history.append((observation, new_reward, done, info))
 
-        return observation, new_reward, done, info
+        return new_observation, new_reward, done, info
 
     def reset(self, start_theta: float = None, start_pos: float = None):
         super().reset(start_theta, start_pos)
