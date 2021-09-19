@@ -7,6 +7,7 @@ import dill
 import evaluation
 from neural_net import discrete_env_with_nn,BayesianRegressor, load
 from demo import demo
+import utils
 import os
 
 args = arguments.collect_arguments()
@@ -68,5 +69,12 @@ def run_cli_cmnds():
             evaluation.plot_angles(histories[0], args.nn_model, filepath=f"plots/{args.agent}", show=False)
         print("No model found...")
         exit(0)
+    elif args.mode == "plot":
+        model = load(f"../models/{args.nn_model}.pt")
+        env = discrete_env_with_nn(reward_fn, model)
+        env.reset(1)
+        history = utils.random_actions(env)
+        evaluation.plot_angles(history, args.nn_model, filepath=f"plots/{args.nn_model}", show=False)
+        evaluation.plot_reward_angle(history)
     elif args.mode == "demo":
         demo()
