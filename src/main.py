@@ -52,6 +52,6 @@ def analysis():
 
 
 if __name__ == "__main__":
-    # test2()
+    test2()
     #main()
     #analysis()
