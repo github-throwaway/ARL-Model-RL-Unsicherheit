@@ -37,7 +37,7 @@ def run_cli_cmnds():
         env = usuc.USUCEnv(noise_offset=0, noisy_circular_sector=(0, 1))
     elif args.env_name == "USUCEnvWithNN-v0":
         model = neural_net.load(f"../models/{args.nn_model}.pt")
-        env = neural_net.USUCEnvWithNN.create(reward_fn, model)
+        env = neural_net.USUCEnvWithNN.create(reward_fn, model, "../discrete-usuc-dataset")
 
     if args.mode == "gen_data":
         data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
@@ -76,7 +76,7 @@ def run_cli_cmnds():
         exit(0)
     elif args.mode == "plot":
         model = neural_net.load(f"../models/{args.nn_model}.pt")
-        env = neural_net.USUCEnvWithNN.create(reward_fn, model)
+        env = neural_net.USUCEnvWithNN.create(reward_fn, model, "../discrete-usuc-dataset")
         env.reset(1)
         history = utils.random_actions(env)
         evaluation.plot_angles(history, args.nn_model, filepath=f"plots/{args.nn_model}", show=False)
