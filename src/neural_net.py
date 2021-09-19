@@ -4,7 +4,6 @@ from typing import Callable
 from uuid import uuid4
 
 import evaluation
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -34,6 +33,7 @@ class BayesianRegressor(nn.Module):
 class NeuralNet:
     def __init__(self, model, time_steps, samples):
         """
+        Neural net wrapper
 
         :param model:
         :param time_steps: Number of time steps for input for prediction
@@ -44,39 +44,31 @@ class NeuralNet:
         self.time_steps = time_steps
         self.samples = samples
 
-    def predict(self, recent_history: list, action) -> tuple:
+    def predict(self, history: list, action) -> tuple:
         """
-        TOOD: given action should be the continous action
-        Predicts next angle and std for a given time series
-        # TODO: reference time_steps set in in init of this NN (used by usuc with NN)
-        :param recent_history: The n recent observations t0, ..., tn)
+        Predicts sine and cosine parts of the next angle and their stds
+
+        :param history: The n recent observations t0, ..., tn)
         :param action: The current action to transition from tn to tn+1
         :return: predicted angle, predicted std
         """
 
         # transform recent history and current action to valid input for nn
-        time_series = transform(recent_history, action)
+        time_series = transform(history, action)
 
         # make prediction
-        x = transform(recent_history, action)
+        x = transform(history, action)
         x = torch.tensor(x).float()
-        pred = self.sample(x)
 
-        return pred
+        # sample
+        means, stds = samples(self.model, x, self.samples)
 
-    def sample(self, x):
-        preds = [self.model(x) for i in range(self.samples)]
-        preds = torch.stack(preds)
-        means = preds.mean(axis=0).detach().numpy()
-        stds = preds.std(axis=0).detach().numpy()
-
-        theta_sin = means[0]
-        theta_cos = means[1]
-
-        std_sin = stds[0]
-        std_cos = stds[1]
-
-        return Prediction(theta_sin, std_sin, theta_cos, std_cos)
+        # format
+        return Prediction(
+            theta_sin=means[0][0],
+            std_sin=means[0][1],
+            theta_cos=stds[0][0],
+            std_cos=stds[0][1])
 
 
 class USUCEnvWithNN(usuc.USUCDiscreteEnv):
@@ -101,6 +93,34 @@ class USUCEnvWithNN(usuc.USUCDiscreteEnv):
 
         # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
         self.nn_reward_fn = reward_fn
+
+    @classmethod
+    def create(cls, model, reward_fn, filepath):
+        """
+        Creates a USUCEnvWithNN from the given parameters
+
+        :param model: Model used for angle prediction
+        :param reward_fn: Reward function used to calculate reward
+        :param filepath: Filepath of the dataset the model was trained on
+        (uses config of the dataset for auto configuration)
+        :return: Instantiated USUCEnvWithNN
+        """
+        _, config = data.load(filepath)
+
+        ncs = config["noisy_circular_sector"]
+        noise_offset = config["noise_offset"]
+        time_steps = config["time_steps"]
+        num_actions = config["num_actions"]
+
+        nn = NeuralNet(model, time_steps, 25)
+
+        return cls(
+            nn=nn,
+            num_actions=num_actions,
+            reward_fn=reward_fn,
+            noise_offset=noise_offset,
+            noisy_circular_sector=(ncs,),
+        )
 
     def step(self, action_idx):
         observation, reward, done, info = super().step(action_idx)
@@ -150,34 +170,55 @@ class USUCEnvWithNN(usuc.USUCDiscreteEnv):
         return observation
 
 
-def transform(recent_history, current_action):
+def transform(history, current_action):
     """
     Transforms given history and current action to time series used as neural net input
-    :param observation:
-    :param current_action:
-    :return: Time series array
+    (i.e. a flattened list of values)
+
+    :param history: List of observations
+    :param current_action: Action to transition to next observation
+    :return: Time series
     """
 
-    time_series = [obs for (obs, _, __, info) in recent_history]
-    # time_series = list(recent_history[-1][0])
-
+    time_series = [obs for (obs, _, __, info) in history]
     # flatten
     time_series = list(chain.from_iterable(time_series))
-
     # append current action
     time_series.append(current_action)
 
     return time_series
 
 
-def load_discrete_usuc():
+def samples(model, x, samples=100):
+    """
+    Predicts for each input an output
+
+    :param model: Model used for prediction
+    :param x: List of inputs
+    :param samples: Number of samples used for prediction
+    :return: List of outputs (corresponding to inputs)
+    """
+    preds = [model(x) for i in range(samples)]
+    preds = torch.stack(preds)
+    means = preds.mean(axis=0)
+    stds = preds.std(axis=0)
+
+    return means, stds
+
+
+def load_discrete_usuc(size: int = None, test_size=0.25):
     """
     Loads discrete usuc dataset
-    :return:
+    (when size is not set, complete dataset is used)
+
+    :param size: Number of lines used for the dataset
+    :param test_size: Percentage of the dataset to be used for test data
+    :return: (x_train, y_train, x_test, y_test)
     """
     data_dir = "../discrete-usuc-dataset"
     time_sequences, config = data.load(data_dir)
 
+    # instantiate env (used to get continuous actions)
     env = usuc.USUCDiscreteEnv(
         num_actions=config["num_actions"],
         noise_offset=config["noise_offset"],
@@ -185,12 +226,14 @@ def load_discrete_usuc():
     )
 
     # fit data / create inputs & outputs
-    x = []
-    y = []
+    x, y = [], []
+
+    # reduce size of dataset if specified
+    if size:
+        time_sequences = time_sequences[:size]
 
     for ts in time_sequences:
-        inputs = ts[:-1]
-        output = ts[-1]
+        inputs, output = ts[:-1], ts[-1]
         obs, _, __, info = output
 
         last_action = env.actions[info["action"]]
@@ -198,8 +241,9 @@ def load_discrete_usuc():
         y.append([obs.theta_sin, obs.theta_cos])
 
     # split data
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.25, random_state=42, shuffle=False)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=42, shuffle=False)
 
+    # convert data to tensors
     x_train, y_train = torch.tensor(x_train).float(), torch.tensor(y_train).float()
     x_test, y_test = torch.tensor(x_test).float(), torch.tensor(y_test).float()
 
@@ -207,23 +251,19 @@ def load_discrete_usuc():
     return x_train, y_train, x_test, y_test
 
 
-def dataloaders(x_train, y_train, x_test, y_test):
+def dataloader(x, y):
     """
-    Preprocesses data to be processable by neural net
-    :param x_train:
-    :param y_train:
-    :param x_test:
-    :param y_test:
-    :return:
+    Creates and returns a dataloader for the given data
+
+    :param x: List of inputs
+    :param y: List of ouputs
+    :return: dataloader
     """
 
-    ds_train = torch.utils.data.TensorDataset(x_train, y_train)
-    dataloader_train = torch.utils.data.DataLoader(ds_train, batch_size=16, shuffle=True)
+    ds = torch.utils.data.TensorDataset(x, y)
+    dataloader = torch.utils.data.DataLoader(ds, batch_size=16, shuffle=True)
 
-    ds_test = torch.utils.data.TensorDataset(x_test, y_test)
-    dataloader_test = torch.utils.data.DataLoader(ds_test, batch_size=16, shuffle=False)
-
-    return dataloader_train, dataloader_test
+    return dataloader
 
 
 def discrete_env_with_nn(reward_fn, model) -> USUCEnvWithNN:
@@ -233,25 +273,17 @@ def discrete_env_with_nn(reward_fn, model) -> USUCEnvWithNN:
 
     :return: Initialized env
     """
-    _, config = data.load("../discrete-usuc-dataset")
-    ncs = config["noisy_circular_sector"]
-    time_steps = config["time_steps"]
-
-    nn = NeuralNet(model, time_steps, 25)
-
-    return USUCEnvWithNN(
-        nn=nn,
-        num_actions=config["num_actions"],
-        reward_fn=reward_fn,
-        noisy_circular_sector=(ncs[0], ncs[1]),
-        noise_offset=config["noise_offset"],
-        render=True
-    )
 
 
-def generate_model():
-    x_train, y_train, x_test, y_test = load_discrete_usuc()
-    dataloader_train, _ = dataloaders(x_train, y_train, x_test, y_test)
+def generate_model(x_train, y_train):
+    """
+    Generates a new model from the given data
+
+    :param x_train: List of training inputs
+    :param y_train: List of training outputs/labels
+    :return: Generated model
+    """
+    dataloader_train = dataloader(x_train, y_train)
 
     regressor = BayesianRegressor(x_train.shape[1], 2)
 
@@ -297,4 +329,6 @@ def load(filepath):
     return torch.load(filepath)
 
 
-
+if __name__ == '__main__':
+    x_train, y_train, y_test, y_test = load_discrete_usuc(size=5000)
+    generate_model(x_train, y_train)
