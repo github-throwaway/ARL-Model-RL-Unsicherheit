@@ -266,15 +266,6 @@ def dataloader(x, y):
     return dataloader
 
 
-def discrete_env_with_nn(reward_fn, model) -> USUCEnvWithNN:
-    """
-    Loads model and the config of the dataset.
-    Note: Make sure model is trained on the current dataset
-
-    :return: Initialized env
-    """
-
-
 def generate_model(x_train, y_train):
     """
     Generates a new model from the given data
