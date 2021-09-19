@@ -19,7 +19,7 @@ Prediction = namedtuple("Prediction", "theta_sin, std_sin, theta_cos, std_cos")
 
 
 class NeuralNet:
-    def __init__(self, model, time_steps):
+    def __init__(self, model, time_steps, samples):
         """
 
         :param model:
@@ -29,6 +29,7 @@ class NeuralNet:
 
         self.model = model
         self.time_steps = time_steps
+        self._samples = samples
 
     def predict(self, recent_history: list, action) -> tuple:
         """
@@ -44,9 +45,23 @@ class NeuralNet:
         time_series = transform(recent_history, action)
 
         # make prediction
-        pred = Prediction(self.model(x))
+        x = transform(recent_history, action)
+        pred = Prediction(self.sample(x))
 
         return pred
+
+    def sample(self, x):
+        preds = [self.model(x) for i in range(self.samples)]
+        preds = torch.stack(preds)
+        means = preds.mean(axis=0).detach().numpy()
+        stds = preds.std(axis=0).detach().numpy()
+        theta_sin = means[0][0]
+        theta_cos = means[0][1]
+
+        std_sin = means[0][0]
+        std_cos = means[0][1]
+
+        return theta_sin, std_sin, theta_cos, std_cos
 
 
 def transform(recent_history, current_action):
@@ -125,6 +140,16 @@ def dataloaders(x_train, y_train, x_test, y_test):
     return dataloader_train, dataloader_test
 
 
+def load(filepath):
+    """
+    Load model
+
+    :param filepath: Filepath where model is located
+    :return: Model
+    """
+    return torch.load(filepath)
+
+
 class USUCEnvWithNN(USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
 
@@ -194,3 +219,5 @@ class USUCEnvWithNN(USUCDiscreteEnv):
 
         # return last observation as initial state
         return observation
+
+
