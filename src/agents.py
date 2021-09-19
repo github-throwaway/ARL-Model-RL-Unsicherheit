@@ -24,7 +24,7 @@ class PBarCallback(callbacks.BaseCallback):
 
 def save(agent, filepath) -> None:
     """
-    Save the agent
+    Saves the agent
 
     :param agent: Stable_baselines3 agent
     :param filepath: Filepath where agent is stored
@@ -48,9 +48,9 @@ def create(agent: str, env):
     #
 
 
-def learn(agent, total_timesteps) -> None:
+def train(agent, total_timesteps) -> None:
     """
-    Given agent learns env
+    Trains the agent
 
     :param agent: Stable_baselines3 agent
     :param total_timesteps: Number of timesteps the agent is trained
