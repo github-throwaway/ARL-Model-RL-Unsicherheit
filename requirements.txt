@@ -10,3 +10,4 @@ gpytorch~=1.5.1
 torch~=1.9.0+cpu
 scikit-learn~=0.24.2
 blitz-bayesian-pytorch
+tikzplotlib
