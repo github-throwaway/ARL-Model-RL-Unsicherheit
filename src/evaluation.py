@@ -4,9 +4,97 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from data import gen
+import utils
 
 
-def plot_angles(original: List[float], observed: List[float], filepath: str = None, show=True) -> None:
+def plot_sin_cos_with_stds(history):
+    x_values = list(range(len(history)))
+
+    observed_theta_sin = []
+    observed_theta_cos = []
+
+    pred_theta_sin = []
+    pred_theta_cos = []
+
+    std_sin = []
+    std_cos = []
+
+    bound_sin = []
+    bound_cos = []
+
+    for step in history:
+        obs, _, _, info = step
+
+        observed_theta_sin.append(info["observed_theta_sin"])
+        observed_theta_cos.append(info["observed_theta_cos"])
+
+        pred_theta_sin.append(obs.theta_sin)
+        pred_theta_cos.append(obs.theta_cos)
+
+        std_sin.append(info["predicted_std_sin"])
+        std_cos.append(info["predicted_std_cos"])
+
+        std_multiplier = 2
+        bound_sin.append(
+            (pred_theta_sin[-1] - (std_multiplier * std_sin[-1]),
+             pred_theta_sin[-1] + (std_multiplier * std_sin[-1])))
+        bound_cos.append(
+            (pred_theta_cos[-1] - (std_multiplier * std_cos[-1]),
+             pred_theta_cos[-1] + (std_multiplier * std_cos[-1])))
+
+    fig, (y1_ax, y2_ax) = plt.subplots(1, 2, figsize=(8, 3))
+
+    ### sine
+    # Plot ground truth data as black stars
+    y1_ax.plot(x_values, observed_theta_sin, 'k*')
+
+    # Predictive mean as blue line
+    y1_ax.plot(x_values, pred_theta_sin, 'b')
+
+    # Shade in confidence
+    y1_ax.fill_between(x_values, [lower for lower, _ in bound_sin], [upper for _, upper in bound_sin], alpha=0.5)
+    y1_ax.set_ylim([-3, 3])
+    y1_ax.legend(['Sin', 'Mean', 'Confidence'])
+    y1_ax.set_title('Sin Values (Likelihood)')
+
+    ### cosine
+    # Plot ground truth data as black stars
+    y2_ax.plot(x_values, observed_theta_cos, 'k*')
+
+    # Predictive mean as blue line
+    y2_ax.plot(x_values, pred_theta_cos, 'b')
+
+    # Shade in confidence
+    y2_ax.fill_between(x_values, [lower for lower, _ in bound_cos], [upper for _, upper in bound_cos], alpha=0.5)
+    y2_ax.set_ylim([-3, 3])
+    y2_ax.legend(['Cos', 'Mean', 'Confidence'])
+    y2_ax.set_title('Cos Values (Likelihood)')
+
+    plt.show()
+
+
+def plot_reward_angle(history):
+    angles = []
+    rewards = []
+    x_pos = []
+
+    for step in history:
+        (obs, reward, done, info) = step
+        # angles.append(utils.calc_theta(obs.theta_sin, obs.theta_cos))
+        # angles.append(utils.calc_theta(info["observed_theta_sin"], info["observed_theta_cos"]))
+        angles.append(info["original_theta"])
+        x_pos.append(obs.x_pos)
+        rewards.append(reward)
+
+    plt.plot(angles, 'x', label="Angles")
+    plt.plot(x_pos, 'x', label="x_pos")
+    plt.plot(rewards, 'x', label="Rewards")
+
+    plt.legend()
+    plt.show()
+
+
+def plot_angles(history: List[tuple], model_name, filepath: str = None, show=True) -> None:
     """
     Plots the original angles as well as the observed angle in one figure for comparison
 
@@ -15,15 +103,18 @@ def plot_angles(original: List[float], observed: List[float], filepath: str = No
     :param filepath: Optional filepath where figure is saved
     """
 
-    assert len(original) == len(observed), "Length of the lists do not match"
+    original = [(info["original_theta_sin"], info["original_theta_cos"]) for (_, __, ___, info) in history]
+    observed = [(obs.theta_sin, obs.theta_cos) for (obs, _, __, ___) in history]
 
     fig = plt.figure(figsize=(19, 12))
-    plt.title("Angle Progression")
+    plt.title(f"Angle Progression with {model_name}")
     plt.xlabel("Time")
     plt.ylabel("Pole Angle")
 
-    plt.plot(original, 'x', label='Original Angle', color="blue")
-    plt.plot(observed, 'x', label='Observed Angle', color="orange")
+    plt.plot([sin for sin, _ in original], 'x', label='Original Angle Sin', color="blue")
+    plt.plot([sin for sin, _ in observed], 'x', label='Observed Angle Sin', color="yellow")
+    plt.plot([cos for _, cos in original], 'x', label='Original Angle Cos', color="green")
+    plt.plot([cos for _, cos in observed], 'x', label='Observed Angle Cos', color="orange")
 
     plt.legend()
     plt.grid()
@@ -124,8 +215,8 @@ def plot_summary(observation, info, filename="summary_plots"):
     plt.show()
 
 
-
-def plot_test(original: List[float], observed: List[float], predicted: List[float], std: List[float], reward: List[float], filepath: str = None, show=True) -> None:
+def plot_test(original: List[float], observed: List[float], predicted: List[float], std: List[float],
+              reward: List[float], filepath: str = None, show=True) -> None:
     """
     Plots the original angles as well as the observed angle in one figure for comparison
 
