@@ -31,7 +31,8 @@ def save(agent, filepath) -> None:
     """
     agent.save(filepath)
 
-def load(agent:str, filepath):
+
+def load(agent: str, filepath):
     """
     Loads a saved agent
     :param agent: The algorithm used to train the agent
@@ -44,6 +45,7 @@ def load(agent:str, filepath):
         return A2C.load(filepath)
     else:
         raise NotImplementedError(f"agent '{agent}' unknown")
+
 
 def create(agent: str, env):
     """

@@ -17,8 +17,8 @@ def collect_arguments():
         description='Define the parameters for USUC-Project')
 
     # startup arguments
-    parser.add_argument("-m","--mode", default="train", type=str,
-                        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | test | eval | first_run | presentation")
+    parser.add_argument("-m","--mode", default="demo", type=str,
+                        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | test | eval | demo")
 
     parser.add_argument("--env_name", default="USUCEnvWithNN-v0", type=str,
                         help="Define the environment: USUCEnv-v0 | USUCEnv-v1 | USUCEnvWithNN-v0")
@@ -31,7 +31,7 @@ def collect_arguments():
     parser.add_argument("--time_steps", default=4, type=int,
                         help='Define how many time_steps are used to predict an angle')
 
-    parser.add_argument("--nn_model", default="blitz50k", type=str,
+    parser.add_argument("--nn_model", default="blitz5k", type=str,
                         help="Define the filename of the model you want to save/load.")
 
     parser.add_argument("-a", "--algorithm", default="ppo", type=str, help="Define the algorithm ppo | a2c")
@@ -42,8 +42,8 @@ def collect_arguments():
 
     # program arguments
     parser.add_argument("-r", "--render", default=False, type=str2bool, help="Define if the env should render")
-    parser.add_argument("-e", "--epochs", default=1000, type=int,
-                        help="Define the number of epochs for the neuronal net")
+    parser.add_argument("--train_steps", default=25000, type=int,
+                        help="Define the number of training steps for the neuronal net")
 
     # RL Algorithm Parameters
     parser.add_argument("--episodes", default=50000, type=int, help="Define the number of episodes")
