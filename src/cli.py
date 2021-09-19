@@ -58,6 +58,15 @@ def run_cli_cmnds():
     elif args.mode == "test":
         time_sequences, config = data.load(args.data_dir)
     elif args.mode == "eval":
-        time_sequences, config = data.load(args.data_dir)
+        # Evaluate a trained RL-Agent
+        if os.path.isfile(f"../agents/{args.algorithm}_{args.agent}.zip"):
+            print("Loading model...")
+            rl_alg = agents.load(args.algorithm, f"../agents/{args.algorithm}_{args.agent}")
+            histories = agents.run(rl_alg, env, 10)
+            with open("history_ppo.p", "wb") as f:
+                dill.dump(histories, f)
+            evaluation.plot_angles(histories[0], args.nn_model, filepath=f"plots/{args.agent}", show=False)
+        print("No model found...")
+        exit(0)
     elif args.mode == "demo":
         demo()
