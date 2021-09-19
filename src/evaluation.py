@@ -3,6 +3,9 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+
+import torch
+
 from data import gen
 import utils
 import tikzplotlib
@@ -250,3 +253,48 @@ def plot_test(original: List[float], observed: List[float], predicted: List[floa
         plt.savefig(filepath)
 
     plt.close(fig)
+
+
+# TODO
+def evaluate_regression(regressor, x, y, samples=25, std_multiplier=2, render=False):
+    preds = [regressor(x) for i in range(samples)]
+    preds = torch.stack(preds)
+    means = preds.mean(axis=0)
+    stds = preds.std(axis=0)
+
+    ci_upper = means + (std_multiplier * stds)
+    ci_lower = means - (std_multiplier * stds)
+    ic_acc = (ci_lower <= y) * (ci_upper >= y)
+    ic_acc = ic_acc.float().mean()
+
+    print("CI acc:", {ic_acc}),
+    print("CI upper acc:", (ci_upper >= y).float().mean()),
+    print("CI lower acc:", (ci_lower <= y).float().mean())
+
+    fig, (ax1, ax2) = plt.subplots(2)
+
+    ax1.set_title('Sine')
+    ax1.plot(y.detach().numpy()[:, 0], color='red', label='Ground Truth')
+    ax1.plot(means.detach().numpy()[:, 0], color='blue', label='Predicted')
+    ax1.set_xlabel('episode')
+
+    ax2.set_title('Cosine')
+    ax2.plot(y.detach().numpy()[:, 1], color='red', label='Ground Truth')
+    ax2.plot(means.detach().numpy()[:, 1], color='blue', label='Predicted')
+    ax2.set_xlabel('episode')
+
+    ax1.legend()
+    ax2.legend()
+    plt.show()
+
+
+def plot_losses(losses):
+    print("Final Loss:", losses[-1])
+
+    fig = plt.figure(figsize=(19, 12))
+
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss Value")
+    plt.plot(losses, '*', label="Losses")
+    plt.legend()
+    plt.show()
