@@ -19,6 +19,7 @@ def demo_noisy_env():
     ppo = agents.create("ppo", env)
     agents.train(ppo, total_timesteps=80000)
     agents.run(ppo, env, 10)
+    env.close()
 
     # env where right where left half is noisy
     print("training agent on second environment...")
@@ -26,6 +27,7 @@ def demo_noisy_env():
     ppo = agents.create("ppo", env)
     agents.train(ppo, total_timesteps=80000)
     agents.run(ppo, env, 10)
+    env.close()
 
 
 def demo_usuc_pole_rotation():
