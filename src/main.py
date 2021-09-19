@@ -4,22 +4,30 @@ import arguments
 import data
 import neural_net
 import reward_functions as rf
+import utils
+import dill
+import evaluation
+import neural_net_blitz
+from tqdm import tqdm
+from neural_net_blitz import BayesianRegressor, CancelOut
+import dill
 import usuc
 
-
-def discrete_env_with_nn(reward_fn) -> usuc.USUCEnvWithNN:
+def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
     """
     Loads model and the config of the dataset.
     Note: Make sure model is trained on the current dataset
 
     :return: Initialized env
     """
-    nn = neural_net.load()
     _, config = data.load("../discrete-usuc-dataset")
+    nn = neural_net.NeuralNet(model, 4, 25)
+
+
 
     ncs = config["noisy_circular_sector"]
 
-    return usuc.USUCEnvWithNN(
+    return neural_net.USUCEnvWithNN(
         nn=nn,
         num_actions=config["num_actions"],
         reward_fn=reward_fn,
@@ -29,18 +37,23 @@ def discrete_env_with_nn(reward_fn) -> usuc.USUCEnvWithNN:
     )
 
 
-def ppo(env, total_timesteps):
+def ppo(env, total_timesteps, filepath=None):
     model = PPO("MlpPolicy", env, verbose=1)
     model.learn(total_timesteps)
     model.save("../agents/ppo")
 
+    if filepath:
+        model.save(filepath)
+
     return model
 
 
-def a2c(env, total_timesteps):
+def a2c(env, total_timesteps, filepath=None):
     model = A2C("MlpPolicy", env, verbose=1)
     model.learn(total_timesteps)
-    model.save("../agents/a2c")
+
+    if filepath:
+        model.save(filepath)
 
     return model
 
@@ -73,34 +86,60 @@ def cli():
 
 
 def main():
-    import dill
-    env = discrete_env_with_nn(rf.simple)
-    agent = ppo(env, total_timesteps=500000)
-    history = run(agent, env)
+    model_name = "blitz5k"
+    model = neural_net_blitz.load(f"../models/{model_name}.pt")
 
-    # save history for analysis
-    with open("./history.p", "wb") as f:
+    env = discrete_env_with_nn(rf.right, model)
+    env = usuc.USUCDiscreteEnv(num_actions=10, noise_offset=0, noisy_circular_sector=(0, 1), reward_fn=rf.right)
+    agent = ppo(env, total_timesteps=10000, filepath="../agents/ppo")
+    input("continue?")
+    history = run(env, agent)
+
+    with open("history_ppo.p", "wb") as f:
         dill.dump(history, f)
+
+    evaluation.plot_angles(history, model_name)
+
+
+def test2():
+    model_name = "blitz5k"
+    model= neural_net_blitz.load(f"../models/{model_name}.pt")
+
+    env = discrete_env_with_nn(rf.best, model)
+    env.reset(1)
+    history = utils.random_actions(env)
+    evaluation.plot_angles(history, model_name)
+    evaluation.plot_reward_angle(history)
+
+def analysis():
+    # load history for analysis
+    with open("history_ppo.p", "rb") as f:
+        history = dill.load(f)
+
+    evaluation.plot_reward_angle(history)
 
 
 if __name__ == "__main__":
-    args = arguments.collect_arguments()
-    if args.first_run:
-        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
-                              runs=args.runs, time_steps=args.time_steps)
-
-    if args.generate_dataset:
-        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
-                              runs=args.runs, time_steps=args.time_steps)
-
-    if args.train_nn:
-        time_sequences, config = data.load(args.data_dir)
-        # TODO: Train nn
-
-    if args.train_ppo:
-        if args.env_name is "USUCEnvWithNN":
-            time_sequences, config = data.load(args.data_dir)
-        # TODO
-        #   if nn exists -> load nn
-        #   else load_data -> train nn -> load nn
-        # if args.ppo_folder not empty -> load ppo model -> else train ppo from scratch
+    # test2()
+    main()
+    analysis()
+    # args = arguments.collect_arguments()
+    # if args.first_run:
+    #     data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
+    #                           runs=args.runs, time_steps=args.time_steps)
+    #
+    # if args.generate_dataset:
+    #     data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
+    #                           runs=args.runs, time_steps=args.time_steps)
+    #
+    # if args.train_nn:
+    #     time_sequences, config = data.load(args.data_dir)
+    #     # TODO: Train nn
+    #
+    # if args.train_ppo:
+    #     if args.env_name is "USUCEnvWithNN":
+    #         time_sequences, config = data.load(args.data_dir)
+    #     # TODO
+    #     #   if nn exists -> load nn
+    #     #   else load_data -> train nn -> load nn
+    #     # if args.ppo_folder not empty -> load ppo model -> else train ppo from scratch
