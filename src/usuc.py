@@ -185,8 +185,8 @@ class USUCDiscreteEnv(USUCEnv):
         # convert continuous action space to discrete action space
         lower_bound = self.action_space.low[0]
         upper_bound = self.action_space.high[0]
-        step = abs(lower_bound - upper_bound) / num_actions
-        self.actions = list(np.arange(lower_bound, upper_bound, step))
+        step = abs(lower_bound - upper_bound) / (num_actions - 1)
+        self.actions = [round(lower_bound + i * step, 5) for i in range(num_actions)]
         self.action_space = Discrete(len(self.actions))
 
     def step(self, action: int):
