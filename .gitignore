@@ -8,6 +8,7 @@ marioai/
 gym-cartpole-swingup/
 *.csv
 *.png
+*.tex
 
 # C extensions
 *.so
