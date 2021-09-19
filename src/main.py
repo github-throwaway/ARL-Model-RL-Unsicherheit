@@ -9,7 +9,7 @@ import dill
 import evaluation
 import neural_net_blitz
 from tqdm import tqdm
-from neural_net_blitz import BayesianRegressor, CancelOut
+from neural_net_blitz import BayesianRegressor
 import dill
 import usuc
 
@@ -78,11 +78,19 @@ def run(env, agent):
 def cli():
     args = arguments.collect_arguments()
 
-    # TODO
-    # if args.mode == "test":
-    #     nn_test()
-    # elif args.mode == "train":
-    #     ppo_nn_env()
+    if args.mode == "gen_data":
+        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,runs=args.runs, time_steps=args.time_steps)
+    elif args.mode == "train":
+        time_sequences, config = data.load(args.data_dir)
+    elif args.mode == "test":
+        time_sequences, config = data.load(args.data_dir)
+    elif args.mode == "eval":
+        time_sequences, config = data.load(args.data_dir)
+    elif args.mode == "first_run":
+        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,runs=args.runs, time_steps=args.time_steps)
+        time_sequences, config = data.load(args.data_dir)
+    elif args.mode == "presentation":
+        time_sequences, config = data.load(args.data_dir)
 
 
 def main():
@@ -123,23 +131,4 @@ if __name__ == "__main__":
     # test2()
     main()
     analysis()
-    # args = arguments.collect_arguments()
-    # if args.first_run:
-    #     data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
-    #                           runs=args.runs, time_steps=args.time_steps)
-    #
-    # if args.generate_dataset:
-    #     data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
-    #                           runs=args.runs, time_steps=args.time_steps)
-    #
-    # if args.train_nn:
-    #     time_sequences, config = data.load(args.data_dir)
-    #     # TODO: Train nn
-    #
-    # if args.train_ppo:
-    #     if args.env_name is "USUCEnvWithNN":
-    #         time_sequences, config = data.load(args.data_dir)
-    #     # TODO
-    #     #   if nn exists -> load nn
-    #     #   else load_data -> train nn -> load nn
-    #     # if args.ppo_folder not empty -> load ppo model -> else train ppo from scratch
+    # TODO Call cli()
