@@ -31,6 +31,19 @@ def save(agent, filepath) -> None:
     """
     agent.save(filepath)
 
+def load(agent:str, filepath):
+    """
+    Loads a saved agent
+    :param agent: The algorithm used to train the agent
+    :param filepath: The path where the agent is stored
+    :return: The loaded agent
+    """
+    if agent == "ppo":
+        return PPO.load(filepath)
+    elif agent == "a2c":
+        return A2C.load(filepath)
+    else:
+        raise NotImplementedError(f"agent '{agent}' unknown")
 
 def create(agent: str, env):
     """
@@ -45,7 +58,6 @@ def create(agent: str, env):
         return A2C("MlpPolicy", env, verbose=0)
     else:
         raise NotImplementedError(f"agent '{agent}' unknown")
-    #
 
 
 def train(agent, total_timesteps) -> None:
