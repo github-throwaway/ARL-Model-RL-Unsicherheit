@@ -78,7 +78,11 @@ def demo_usuc_random_actions():
     evaluation.plot_angles(history, "no model")
 
 
-if __name__ == "__main__":
+def demo():
     demo_usuc_pole_rotation()
     demo_usuc_random_actions()
     demo_noisy_env()
+
+
+if __name__ == "__main__":
+    demo()
