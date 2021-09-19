@@ -6,7 +6,6 @@ import torch
 from sklearn.model_selection import train_test_split
 
 import data
-import usuc
 from usuc import USUCDiscreteEnv, Observation
 
 # types
@@ -59,6 +58,77 @@ class NeuralNet:
         std_cos = stds[1]
 
         return Prediction(theta_sin, std_sin, theta_cos, std_cos)
+
+
+class USUCEnvWithNN(USUCDiscreteEnv):
+    ID = "USUCEnvWithNN-v0"
+
+    def __init__(self, nn, reward_fn: Callable[[Observation, float, dict], float], *args, **kwargs):
+        """
+        **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
+
+        Uses neural net to estimate/predict uncertainty of theta which in turn is used to calculate the reward.
+        See :class:`DiscreteUSUCEnv` and :class:`USUCEnv` for additional parameters.
+
+        :param nn: The neural net used for estimation/prediction
+        :param reward_fn: Required reward function to calculate reward based on predictions of the neural net
+        (params: observation, reward from wrapped env, info object; returns: new reward)
+        """
+        super().__init__(*args, **kwargs)
+
+        # configuration
+        self.nn = nn
+        self._history = []
+
+        # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
+        self.nn_reward_fn = reward_fn
+
+    def step(self, action_idx):
+        observation, reward, done, info = super().step(action_idx)
+
+        # get recent history
+        recent_history = self._history[-self.nn.time_steps:]
+
+        # make prediction
+        pred = self.nn.predict(recent_history, self.actions[action_idx])
+        info.update(
+            {
+                "observed_theta_sin": observation.theta_sin,
+                "observed_theta_cos": observation.theta_cos,
+                "predicted_theta_sin": pred.theta_sin,
+                "predicted_std_sin": pred.std_sin,
+                "predicted_theta_cos": pred.theta_cos,
+                "predicted_std_cos": pred.std_cos,
+            }
+        )
+
+        # update observation with predicted theta
+        # check to remind us to update this piece of code if we switch to cos/sin representation
+        new_observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
+
+        # calculate reward based on prediction
+        new_reward = self.nn_reward_fn(observation, reward, info)
+
+        # add step to history
+        self._history.append((observation, new_reward, done, info))
+
+        return new_observation, new_reward, done, info
+
+    def reset(self, start_theta: float = None, start_pos: float = None):
+        super().reset(start_theta, start_pos)
+        self._history = []
+
+        # collect initial observations
+        # neural network needs multiple observations for prediction
+        # i.e. we have to pre-fill our history with n observations
+        # (where n = self.nn.time_steps)
+        for _ in range(self.nn.time_steps):
+            action = self.action_space.sample()
+            observation, reward, done, info = super().step(action)
+            self._history.append((observation, reward, done, info))
+
+        # return last observation as initial state
+        return observation
 
 
 def transform(recent_history, current_action):
@@ -137,75 +207,24 @@ def dataloaders(x_train, y_train, x_test, y_test):
     return dataloader_train, dataloader_test
 
 
+def discrete_env_with_nn(reward_fn, model) -> USUCEnvWithNN:
+    """
+    Loads model and the config of the dataset.
+    Note: Make sure model is trained on the current dataset
 
-class USUCEnvWithNN(USUCDiscreteEnv):
-    ID = "USUCEnvWithNN-v0"
+    :return: Initialized env
+    """
+    _, config = data.load("../discrete-usuc-dataset")
+    ncs = config["noisy_circular_sector"]
+    time_steps = config["time_steps"]
 
-    def __init__(self, nn, reward_fn: Callable[[Observation, float, dict], float], *args, **kwargs):
-        """
-        **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
+    nn = NeuralNet(model, time_steps, 25)
 
-        Uses neural net to estimate/predict uncertainty of theta which in turn is used to calculate the reward.
-        See :class:`DiscreteUSUCEnv` and :class:`USUCEnv` for additional parameters.
-
-        :param nn: The neural net used for estimation/prediction
-        :param reward_fn: Required reward function to calculate reward based on predictions of the neural net
-        (params: observation, reward from wrapped env, info object; returns: new reward)
-        """
-        super().__init__(*args, **kwargs)
-
-        # configuration
-        self.nn = nn
-        self._history = []
-
-        # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
-        self.nn_reward_fn = reward_fn
-
-    def step(self, action_idx):
-        observation, reward, done, info = super().step(action_idx)
-
-        # get recent history
-        recent_history = self._history[-self.nn.time_steps:]
-
-        # make prediction
-        pred = self.nn.predict(recent_history, self.actions[action_idx])
-        info.update(
-            {
-                "observed_theta_sin": observation.theta_sin,
-                "observed_theta_cos": observation.theta_cos,
-                "predicted_theta_sin": pred.theta_sin,
-                "predicted_std_sin": pred.std_sin,
-                "predicted_theta_cos": pred.theta_cos,
-                "predicted_std_cos": pred.std_cos,
-            }
-        )
-
-        # update observation with predicted theta
-        # check to remind us to update this piece of code if we switch to cos/sin representation
-        new_observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
-
-        # calculate reward based on prediction
-        new_reward = self.nn_reward_fn(observation, reward, info)
-
-        # add step to history
-        self._history.append((observation, new_reward, done, info))
-
-        return new_observation, new_reward, done, info
-
-    def reset(self, start_theta: float = None, start_pos: float = None):
-        super().reset(start_theta, start_pos)
-        self._history = []
-
-        # collect initial observations
-        # neural network needs multiple observations for prediction
-        # i.e. we have to pre-fill our history with n observations
-        # (where n = self.nn.time_steps)
-        for _ in range(self.nn.time_steps):
-            action = self.action_space.sample()
-            observation, reward, done, info = super().step(action)
-            self._history.append((observation, reward, done, info))
-
-        # return last observation as initial state
-        return observation
-
-
+    return USUCEnvWithNN(
+        nn=nn,
+        num_actions=config["num_actions"],
+        reward_fn=reward_fn,
+        noisy_circular_sector=(ncs[0], ncs[1]),
+        noise_offset=config["noise_offset"],
+        render=True
+    )
