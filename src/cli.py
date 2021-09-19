@@ -47,7 +47,7 @@ def run_cli_cmnds():
         with open("history_ppo.p", "wb") as f:
             dill.dump(histories, f)
 
-        evaluation.plot_angles(histories[0], args.nn_model)
+        evaluation.plot_angles(histories[0], args.nn_model, filepath=f"plots/{args.agent}")
 
     elif args.mode == "test":
         time_sequences, config = data.load(args.data_dir)

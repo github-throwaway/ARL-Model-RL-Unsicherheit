@@ -120,12 +120,12 @@ def plot_angles(history: List[tuple], model_name, filepath: str = None, show=Tru
     plt.legend()
     plt.grid()
 
-    if show:
-        plt.show()
-
     if filepath:
         tikzplotlib.save(f"{filepath}.tex")
         plt.savefig(filepath)
+
+    if show:
+        plt.show()
 
     plt.close(fig)
 
