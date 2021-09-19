@@ -8,7 +8,7 @@ import neural_net_blitz
 import reward_functions as rf
 import usuc
 import utils
-from utils import discrete_env_with_nn
+from neural_net import discrete_env_with_nn
 
 
 def main():
@@ -55,4 +55,3 @@ if __name__ == "__main__":
     # test2()
     #main()
     #analysis()
-    run_cli_cmnds()
