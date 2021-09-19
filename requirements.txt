@@ -7,7 +7,7 @@ git+git://github.com/angelolovatto/gym-cartpole-swingup
 dill~=0.3.4
 tqdm~=4.62.2
 gpytorch~=1.5.1
-torch~=1.9.0+cpu
+torch
 scikit-learn~=0.24.2
 blitz-bayesian-pytorch
 tikzplotlib

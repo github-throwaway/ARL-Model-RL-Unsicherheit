@@ -4,16 +4,16 @@ import dill
 
 import agents
 import evaluation
-import neural_net_blitz
 import reward_functions as rf
 import usuc
 import utils
-from neural_net import discrete_env_with_nn
+from neural_net import discrete_env_with_nn, load, BayesianRegressor
+from cli import run_cli_cmnds
 
 
 def main():
     model_name = "blitz5k"
-    model = neural_net_blitz.load(f"../models/{model_name}.pt")
+    model = load(f"../models/{model_name}.pt")
 
     # env = discrete_env_with_nn(rf.right, model)
     # from gym_cartpole_swingup.envs import cartpole_swingup
@@ -34,7 +34,7 @@ def main():
 
 def test2():
     model_name = "blitz5k"
-    model= neural_net_blitz.load(f"../models/{model_name}.pt")
+    model = load(f"../models/{model_name}.pt")
 
     env = discrete_env_with_nn(rf.best, model)
     env.reset(1)
@@ -52,6 +52,8 @@ def analysis():
 
 
 if __name__ == "__main__":
-    test2()
+    #test2()
     #main()
     #analysis()
+    run_cli_cmnds()
+
