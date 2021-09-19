@@ -65,10 +65,10 @@ class NeuralNet:
 
         # format
         return Prediction(
-            theta_sin=means[0][0],
-            std_sin=means[0][1],
-            theta_cos=stds[0][0],
-            std_cos=stds[0][1])
+            theta_sin=means[0],
+            std_sin=stds[0],
+            theta_cos=means[1],
+            std_cos=stds[1])
 
 
 class USUCEnvWithNN(usuc.USUCDiscreteEnv):
@@ -106,20 +106,15 @@ class USUCEnvWithNN(usuc.USUCDiscreteEnv):
         :return: Instantiated USUCEnvWithNN
         """
         _, config = data.load(filepath)
-
-        ncs = config["noisy_circular_sector"]
-        noise_offset = config["noise_offset"]
         time_steps = config["time_steps"]
-        num_actions = config["num_actions"]
-
         nn = NeuralNet(model, time_steps, 25)
 
         return cls(
             nn=nn,
-            num_actions=num_actions,
             reward_fn=reward_fn,
-            noise_offset=noise_offset,
-            noisy_circular_sector=(ncs,),
+            num_actions=config["num_actions"],
+            noise_offset=config["noise_offset"],
+            noisy_circular_sector=config["noisy_circular_sector"]
         )
 
     def step(self, action_idx):
@@ -203,7 +198,7 @@ def samples(model, x, samples=100):
     means = preds.mean(axis=0)
     stds = preds.std(axis=0)
 
-    return means, stds
+    return means.detach().numpy(), stds.detach().numpy()
 
 
 def load_discrete_usuc(size: int = None, test_size=0.25):
