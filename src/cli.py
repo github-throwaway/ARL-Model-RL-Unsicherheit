@@ -7,6 +7,7 @@ import dill
 import evaluation
 from neural_net import discrete_env_with_nn,BayesianRegressor, load
 from demo import demo
+import os
 
 args = arguments.collect_arguments()
 
@@ -38,7 +39,12 @@ def run_cli_cmnds():
     elif args.mode == "train_env":
         time_sequences, config = data.load(args.data_dir)
     elif args.mode == "train_rl":
-        rl_alg = agents.create(args.algorithm, env)
+        if os.path.isfile(f"../agents/{args.algorithm}_{args.agent}.zip"):
+            print("Loading model...")
+            rl_alg = agents.load(args.algorithm, f"../agents/{args.algorithm}_{args.agent}")
+        else:
+            print("Creating model...")
+            rl_alg = agents.create(args.algorithm, env)
         agents.train(rl_alg, total_timesteps=args.train_steps)
         agents.save(rl_alg, f"../agents/{args.algorithm}_{args.agent}")
         input("continue?")
