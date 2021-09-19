@@ -1,4 +1,3 @@
-from stable_baselines3 import PPO, A2C
 
 import arguments
 import data
@@ -12,6 +11,7 @@ from tqdm import tqdm
 from neural_net_blitz import BayesianRegressor
 import dill
 import usuc
+import agents
 
 def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
     """
@@ -23,8 +23,6 @@ def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
     _, config = data.load("../discrete-usuc-dataset")
     nn = neural_net.NeuralNet(model, 4, 25)
 
-
-
     ncs = config["noisy_circular_sector"]
 
     return neural_net.USUCEnvWithNN(
@@ -35,44 +33,6 @@ def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
         noise_offset=config["noise_offset"],
         render=True
     )
-
-
-def ppo(env, total_timesteps, filepath=None):
-    model = PPO("MlpPolicy", env, verbose=1)
-    model.learn(total_timesteps)
-    model.save("../agents/ppo")
-
-    if filepath:
-        model.save(filepath)
-
-    return model
-
-
-def a2c(env, total_timesteps, filepath=None):
-    model = A2C("MlpPolicy", env, verbose=1)
-    model.learn(total_timesteps)
-
-    if filepath:
-        model.save(filepath)
-
-    return model
-
-
-def run(env, agent):
-    history = []
-    for _ in range(10):
-        obs = env.reset()
-        for i in range(1000):
-            print(f"{i}. Step:")
-            action, _states = agent.predict(obs)
-            obs, reward, done, info = env.step(action)
-            history.append((obs, reward, done, info))
-            env.render()
-
-            if done:
-                break
-
-    return history
 
 
 def cli():
@@ -96,17 +56,22 @@ def cli():
 def main():
     model_name = "blitz5k"
     model = neural_net_blitz.load(f"../models/{model_name}.pt")
+    #
+    # env = discrete_env_with_nn(rf.right, model)
+    # from gym_cartpole_swingup.envs import cartpole_swingup
+    # env = cartpole_swingup.CartPoleSwingUpV1()
+    env = usuc.USUCDiscreteEnv(num_actions=100, noise_offset=0, noisy_circular_sector=(0, 1))
+    ppo = agents.create("ppo", env)
+    agents.train(ppo, total_timesteps=80000)
+    agents.save(ppo, "../agents/ppo")
 
-    env = discrete_env_with_nn(rf.right, model)
-    env = usuc.USUCDiscreteEnv(num_actions=10, noise_offset=0, noisy_circular_sector=(0, 1), reward_fn=rf.right)
-    agent = ppo(env, total_timesteps=10000, filepath="../agents/ppo")
     input("continue?")
-    history = run(env, agent)
+    histories = agents.run(ppo, env, 10)
 
     with open("history_ppo.p", "wb") as f:
-        dill.dump(history, f)
+        dill.dump(histories, f)
 
-    evaluation.plot_angles(history, model_name)
+    evaluation.plot_angles(histories[0], model_name)
 
 
 def test2():
@@ -118,6 +83,7 @@ def test2():
     history = utils.random_actions(env)
     evaluation.plot_angles(history, model_name)
     evaluation.plot_reward_angle(history)
+
 
 def analysis():
     # load history for analysis
