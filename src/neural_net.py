@@ -3,7 +3,6 @@ from itertools import chain
 from typing import Callable
 from uuid import uuid4
 
-import evaluation
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 import data
+import evaluation
 import usuc
 
 # types
