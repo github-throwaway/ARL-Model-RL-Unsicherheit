@@ -58,8 +58,8 @@ class NeuralNet:
         theta_sin = means[0][0]
         theta_cos = means[0][1]
 
-        std_sin = means[0][0]
-        std_cos = means[0][1]
+        std_sin = stds[0][0]
+        std_cos = stds[0][1]
 
         return theta_sin, std_sin, theta_cos, std_cos
 
