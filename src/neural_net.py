@@ -8,12 +8,15 @@ import torch
 from sklearn.model_selection import train_test_split
 
 import data
+import usuc
 from usuc import USUCDiscreteEnv, Observation
 
 # types
-PredictedTheta = namedtuple("PredictedTheta", "sin cos")
 
 ACTIONS = USUCDiscreteEnv(num_actions=10, noise_offset=0.3, noisy_circular_sector=(0, math.pi)).actions
+
+Prediction = namedtuple("Prediction", "theta_sin, std_sin, theta_cos, std_cos")
+
 
 class NeuralNet:
     def __init__(self, model, time_steps):
@@ -40,28 +43,12 @@ class NeuralNet:
         # transform recent history and current action to valid input for nn
         time_series = transform(recent_history, action)
 
-        # magic
-        # TODO: was passiert hier?
-        x = ""
+        # make prediction
+        pred = Prediction(self.model(x))
 
-        # make predictions
-        # don't use model.predict here, does not return std
-        yhats = self.model(x)
-        med = yhats.loc
-        std = yhats.scale
-
-        # TODO: log predictions
-        # TODO: predict
-        # extract values from tensors
-        # med = float(backend.eval(np.squeeze(med)))
-        # std = float(backend.eval(np.squeeze(std)))
-
-        # med = predicted angle, std = predicted std
-        predicted_theta = PredictedTheta(sin=1., cos=med)
-        return predicted_theta, std
+        return pred
 
 
-# TODO: refactor transform()
 def transform(recent_history, current_action):
     """
     Transforms given history and current action to time series used as neural net input
@@ -72,7 +59,6 @@ def transform(recent_history, current_action):
 
     time_series = [obs for (obs, _, __, info) in recent_history]
     # time_series = list(recent_history[-1][0])
-
 
     # flatten
     time_series = list(chain.from_iterable(time_series))
@@ -89,7 +75,13 @@ def load_discrete_usuc():
     :return:
     """
     data_dir = "../discrete-usuc-dataset"
-    time_sequences, _ = data.load(data_dir)
+    time_sequences, config = data.load(data_dir)
+
+    env = usuc.USUCDiscreteEnv(
+        num_actions=config["num_actions"],
+        noise_offset=config["noise_offset"],
+        noisy_circular_sector=config["noisy_circular_sector"]
+    )
 
     # fit data / create inputs & outputs
     x = []
@@ -100,8 +92,7 @@ def load_discrete_usuc():
         output = ts[-1]
         obs, _, __, info = output
 
-        # TODO: action must be normalized via env.actions[info["aciton"]
-        last_action = info["action"]
+        last_action = env.actions[info["action"]]
         x.append(transform(inputs, last_action))
         y.append([obs.theta_sin, obs.theta_cos])
 
@@ -157,26 +148,28 @@ class USUCEnvWithNN(USUCDiscreteEnv):
         # reward function stored separately since its type differs as it is predicted values of nn to calc the reward
         self.nn_reward_fn = reward_fn
 
-    def step(self, action):
-        observation, reward, done, info = super().step(action)
+    def step(self, action_idx):
+        observation, reward, done, info = super().step(action_idx)
 
         # get recent history
         recent_history = self._history[-self.nn.time_steps:]
 
         # make prediction
-        predicted_theta, predicted_std = self.nn.predict(recent_history, action)
+        pred = self.nn.predict(recent_history, self.actions[action_idx])
         info.update(
             {
                 "observed_theta_sin": observation.theta_sin,
                 "observed_theta_cos": observation.theta_cos,
-                "predicted_theta": predicted_theta,
-                "predicted_std": predicted_std,
+                "predicted_theta_sin": pred.theta_sin,
+                "predicted_std_sin": pred.std_sin,
+                "predicted_theta_cos": pred.theta_cos,
+                "predicted_std_cos": pred.std_cos,
             }
         )
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
-        observation = observation._replace(theta_sin=predicted_theta.sin, theta_cos=predicted_theta.cos)
+        observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
 
         # calculate reward based on prediction
         new_reward = self.nn_reward_fn(observation, reward, info)
