@@ -18,7 +18,7 @@ def collect_arguments():
 
     # startup arguments
     parser.add_argument("-m","--mode", default="demo", type=str,
-                        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | test | eval | demo")
+                        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | test | eval | plot | demo")
 
     parser.add_argument("--env_name", default="USUCEnvWithNN-v0", type=str,
                         help="Define the environment: USUCEnv-v0 | USUCEnv-v1 | USUCEnvWithNN-v0")
