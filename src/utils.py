@@ -4,6 +4,9 @@ from typing import List
 import gym
 import numpy as np
 
+import data
+import neural_net
+
 
 def calc_theta(sin, cos):
     """
@@ -52,3 +55,26 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
             break
 
     return history
+
+
+def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
+    """
+    Loads model and the config of the dataset.
+    Note: Make sure model is trained on the current dataset
+
+    :return: Initialized env
+    """
+    _, config = data.load("../discrete-usuc-dataset")
+    ncs = config["noisy_circular_sector"]
+    time_steps = config["time_steps"]
+
+    nn = neural_net.NeuralNet(model, time_steps, 25)
+
+    return neural_net.USUCEnvWithNN(
+        nn=nn,
+        num_actions=config["num_actions"],
+        reward_fn=reward_fn,
+        noisy_circular_sector=(ncs[0], ncs[1]),
+        noise_offset=config["noise_offset"],
+        render=True
+    )
