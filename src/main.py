@@ -84,4 +84,23 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = arguments.collect_arguments()
+    if args.first_run:
+        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
+                              runs=args.runs, time_steps=args.time_steps)
+
+    if args.generate_dataset:
+        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,
+                              runs=args.runs, time_steps=args.time_steps)
+
+    if args.train_nn:
+        time_sequences, config = data.load(args.data_dir)
+        # TODO: Train nn
+
+    if args.train_ppo:
+        if args.env_name is "USUCEnvWithNN":
+            time_sequences, config = data.load(args.data_dir)
+        # TODO
+        #   if nn exists -> load nn
+        #   else load_data -> train nn -> load nn
+        # if args.ppo_folder not empty -> load ppo model -> else train ppo from scratch

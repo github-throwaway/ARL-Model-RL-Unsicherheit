@@ -6,6 +6,8 @@ from uuid import uuid4
 import dill
 import gym
 from tqdm import tqdm
+import os
+import math
 
 import usuc
 import utils
@@ -113,6 +115,8 @@ def load(data_dir: str) -> tuple:
     :return: (time sequences, dataset config)
     """
 
+    if len(os.listdir(data_dir)) == 0:
+        generate_dataset(data_dir=data_dir)
     # load meta info
     with open(data_dir + CONFIG_FILEPATH) as f:
         config = json.load(f)
@@ -123,10 +127,19 @@ def load(data_dir: str) -> tuple:
     return windows, config
 
 
-if __name__ == '__main__':
-    import os
-    import math
+def generate_dataset(num_actions=10, noise_offset=0.3, noisy_circular_sector=(0, math.pi),
+                     data_dir="../discrete-usuc-dataset", runs=900, time_steps=4):
+    # creating empty dir (overwrites dir if it already exists)
+    shutil.rmtree(data_dir, ignore_errors=True)
+    os.makedirs(data_dir)
 
+    # run generator
+    env = usuc.USUCDiscreteEnv(num_actions, noisy_circular_sector, noise_offset, render=False)
+
+    gen(env, runs, time_steps, data_dir)
+
+
+if __name__ == '__main__':
     # env config
     num_actions = 10
     noise_offset = 0.3
