@@ -80,6 +80,7 @@ def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     windows = []
     for _ in tqdm(range(runs)):
         filename = data_dir + "/" + str(uuid4().time_low)
+        # TODO: random angle should start between [0, pi/2] or [3/2pi, 2pi] to collect more data in upper half of the circle
         env.reset(utils.random_start_theta())
         history = _gen_history(env, filename + "-rec.p")
 
