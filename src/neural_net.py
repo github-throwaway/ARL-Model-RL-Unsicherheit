@@ -1,15 +1,34 @@
 from collections import namedtuple
 from itertools import chain
 from typing import Callable
+from uuid import uuid4
 
+import evaluation
+import matplotlib.pyplot as plt
 import torch
+import torch.nn as nn
+import torch.optim as optim
+from blitz.modules import BayesianLinear
+from blitz.utils import variational_estimator
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 import data
-from usuc import USUCDiscreteEnv, Observation
+import usuc
 
 # types
 Prediction = namedtuple("Prediction", "theta_sin, std_sin, theta_cos, std_cos")
+
+
+@variational_estimator
+class BayesianRegressor(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        """Simple Bayesian Neural Net"""
+        super().__init__()
+        self.blinear = BayesianLinear(input_dim, output_dim)
+
+    def forward(self, x):
+        return self.blinear(x)
 
 
 class NeuralNet:
@@ -60,10 +79,10 @@ class NeuralNet:
         return Prediction(theta_sin, std_sin, theta_cos, std_cos)
 
 
-class USUCEnvWithNN(USUCDiscreteEnv):
+class USUCEnvWithNN(usuc.USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
 
-    def __init__(self, nn, reward_fn: Callable[[Observation, float, dict], float], *args, **kwargs):
+    def __init__(self, nn, reward_fn: Callable[[usuc.Observation, float, dict], float], *args, **kwargs):
         """
         **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
 
@@ -228,3 +247,54 @@ def discrete_env_with_nn(reward_fn, model) -> USUCEnvWithNN:
         noise_offset=config["noise_offset"],
         render=True
     )
+
+
+def generate_model():
+    x_train, y_train, x_test, y_test = load_discrete_usuc()
+    dataloader_train, _ = dataloaders(x_train, y_train, x_test, y_test)
+
+    regressor = BayesianRegressor(x_train.shape[1], 2)
+
+    optimizer = optim.Adam(regressor.parameters(), lr=0.01)
+    criterion = torch.nn.MSELoss()
+    complexity_cost_weight = 1. / x_train.shape[0]
+
+    losses = []
+    for epoch in tqdm(range(100)):
+        new_epoch = True
+        for i, (datapoints, labels) in enumerate(dataloader_train):
+            optimizer.zero_grad()
+
+            loss = regressor.sample_elbo(
+                inputs=datapoints,
+                labels=labels,
+                criterion=criterion,
+                sample_nbr=3,
+                complexity_cost_weight=complexity_cost_weight
+            )
+
+            loss.backward()
+            optimizer.step()
+
+            if new_epoch:
+                losses.append(loss)
+                new_epoch = False
+
+    # plot losses
+    evaluation.plot_losses(losses)
+
+    # save model
+    torch.save(regressor, f"../models/blitz-{str(uuid4().time_low)}.pt")
+
+
+def load(filepath):
+    """
+    Loads model
+
+    :param filepath: Filepath where model is located
+    :return: Loaded model
+    """
+    return torch.load(filepath)
+
+
+
