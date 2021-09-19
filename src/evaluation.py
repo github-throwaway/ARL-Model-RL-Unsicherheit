@@ -5,6 +5,7 @@ import numpy as np
 import os
 from data import gen
 import utils
+import tikzplotlib
 
 
 def plot_sin_cos_with_stds(history):
@@ -112,7 +113,7 @@ def plot_angles(history: List[tuple], model_name, filepath: str = None, show=Tru
     plt.ylabel("Pole Angle")
 
     plt.plot([sin for sin, _ in original], 'x', label='Original Angle Sin', color="blue")
-    plt.plot([sin for sin, _ in observed], 'x', label='Observed Angle Sin', color="yellow")
+    plt.plot([sin for sin, _ in observed], 'x', label='Observed Angle Sin', color="red")
     plt.plot([cos for _, cos in original], 'x', label='Original Angle Cos', color="green")
     plt.plot([cos for _, cos in observed], 'x', label='Observed Angle Cos', color="orange")
 
@@ -123,6 +124,7 @@ def plot_angles(history: List[tuple], model_name, filepath: str = None, show=Tru
         plt.show()
 
     if filepath:
+        tikzplotlib.save(f"{filepath}.tex")
         plt.savefig(filepath)
 
     plt.close(fig)
