@@ -10,8 +10,10 @@ import neural_net_blitz
 from tqdm import tqdm
 from neural_net_blitz import BayesianRegressor
 import dill
-import usuc
 import agents
+from cli import run_cli_cmnds
+from src import usuc
+
 
 def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
     """
@@ -35,26 +37,8 @@ def discrete_env_with_nn(reward_fn, model) -> neural_net.USUCEnvWithNN:
     )
 
 
-def cli():
-    args = arguments.collect_arguments()
-
-    if args.mode == "gen_data":
-        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,runs=args.runs, time_steps=args.time_steps)
-    elif args.mode == "train":
-        time_sequences, config = data.load(args.data_dir)
-    elif args.mode == "test":
-        time_sequences, config = data.load(args.data_dir)
-    elif args.mode == "eval":
-        time_sequences, config = data.load(args.data_dir)
-    elif args.mode == "first_run":
-        data.generate_dataset(num_actions=args.num_actions, noise_offset=args.noise_offset, data_dir=args.data_dir,runs=args.runs, time_steps=args.time_steps)
-        time_sequences, config = data.load(args.data_dir)
-    elif args.mode == "presentation":
-        time_sequences, config = data.load(args.data_dir)
-
-
 def main():
-    model_name = "blitz5k"
+    model_name = "blitz50k"
     model = neural_net_blitz.load(f"../models/{model_name}.pt")
     #
     # env = discrete_env_with_nn(rf.right, model)
@@ -95,6 +79,6 @@ def analysis():
 
 if __name__ == "__main__":
     # test2()
-    main()
-    analysis()
-    # TODO Call cli()
+    #main()
+    #analysis()
+    run_cli_cmnds()
