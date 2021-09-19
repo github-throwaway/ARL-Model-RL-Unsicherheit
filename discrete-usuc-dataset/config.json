@@ -1,1 +1,1 @@
-{"num_time_sequences": 216712, "num_actions": 10, "number_of_runs": 900, "time_steps": 4, "noisy_circular_sector": [0, 3.141592653589793], "noise_offset": 0.3}
+{"num_time_sequences": 491929, "num_actions": 10, "number_of_runs": 900, "time_steps": 4, "noisy_circular_sector": [0, 3.141592653589793], "noise_offset": 0.3}
