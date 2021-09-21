@@ -30,11 +30,13 @@ class USUCEnv(gym.Env):
         print("registered", cls.ID)
 
     def __init__(
-            self,
-            noisy_circular_sector,
-            noise_offset,
-            reward_fn: Callable[[Observation, float, dict], float] = lambda obs, reward, info: reward,
-            render=True,
+        self,
+        noisy_circular_sector,
+        noise_offset,
+        reward_fn: Callable[
+            [Observation, float, dict], float
+        ] = lambda obs, reward, info: reward,
+        render=True,
     ):
         """
         **Continuous Uncertain SwingUp Cartpole Environment**
@@ -150,7 +152,7 @@ class USUCEnv(gym.Env):
             x_dot=x_dot,
             theta_sin=math.sin(theta),
             theta_cos=math.cos(theta),
-            theta_dot=theta_dot
+            theta_dot=theta_dot,
         )
 
     def render(self, mode="human", **kwargs) -> None:

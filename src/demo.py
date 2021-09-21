@@ -7,12 +7,15 @@ import utils
 
 
 def demo_noisy_env():
-    print("=== Noisy Environment ===",
-          "These examples are only to demonstrate the use of the library and its functions, "
-          "and the trained agents may not solve the environments.",
-          "- 1. Environment: Left half is noisy =>  Agent tries to swing pole upwards preferably via the right half.",
-          "- 2. Environment: Right half is noisy => Agent tries to swing pole upwards preferably via the left half.",
-          "", sep="\n")
+    print(
+        "=== Noisy Environment ===",
+        "These examples are only to demonstrate the use of the library and its functions, "
+        "and the trained agents may not solve the environments.",
+        "- 1. Environment: Left half is noisy =>  Agent tries to swing pole upwards preferably via the right half.",
+        "- 2. Environment: Right half is noisy => Agent tries to swing pole upwards preferably via the left half.",
+        "",
+        sep="\n",
+    )
     # env where left where left half is noisy
     print("training agent on first environment...")
     env = usuc.USUCEnv(noise_offset=0.3, noisy_circular_sector=(0, math.pi))

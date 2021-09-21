@@ -9,7 +9,7 @@ class PBarCallback(callbacks.BaseCallback):
         self.pbar = None
 
     def _on_training_start(self):
-        self.pbar = tqdm(total=self.locals['total_timesteps'])
+        self.pbar = tqdm(total=self.locals["total_timesteps"])
 
     def _on_step(self):
         self.pbar.n = self.n_calls
@@ -70,9 +70,7 @@ def train(agent, total_timesteps) -> None:
     :param total_timesteps: Number of timesteps the agent is trained
     """
 
-    cb = callbacks.CallbackList([
-        PBarCallback(total_timesteps)
-    ])
+    cb = callbacks.CallbackList([PBarCallback(total_timesteps)])
 
     agent.learn(total_timesteps, cb)
 

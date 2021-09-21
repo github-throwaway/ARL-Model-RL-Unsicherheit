@@ -65,16 +65,20 @@ class NeuralNet:
 
         # format
         return Prediction(
-            theta_sin=means[0],
-            std_sin=stds[0],
-            theta_cos=means[1],
-            std_cos=stds[1])
+            theta_sin=means[0], std_sin=stds[0], theta_cos=means[1], std_cos=stds[1]
+        )
 
 
 class USUCEnvWithNN(usuc.USUCDiscreteEnv):
     ID = "USUCEnvWithNN-v0"
 
-    def __init__(self, nn, reward_fn: Callable[[usuc.Observation, float, dict], float], *args, **kwargs):
+    def __init__(
+        self,
+        nn,
+        reward_fn: Callable[[usuc.Observation, float, dict], float],
+        *args,
+        **kwargs,
+    ):
         """
         **Discrete Uncertain SwingUp Cartpole Environment with Neural Net**
 
@@ -114,14 +118,14 @@ class USUCEnvWithNN(usuc.USUCDiscreteEnv):
             reward_fn=reward_fn,
             num_actions=config["num_actions"],
             noise_offset=config["noise_offset"],
-            noisy_circular_sector=config["noisy_circular_sector"]
+            noisy_circular_sector=config["noisy_circular_sector"],
         )
 
     def step(self, action_idx):
         observation, reward, done, info = super().step(action_idx)
 
         # get recent history
-        recent_history = self._history[-self.nn.time_steps:]
+        recent_history = self._history[-self.nn.time_steps :]
 
         # make prediction
         pred = self.nn.predict(recent_history, self.actions[action_idx])
@@ -138,7 +142,9 @@ class USUCEnvWithNN(usuc.USUCDiscreteEnv):
 
         # update observation with predicted theta
         # check to remind us to update this piece of code if we switch to cos/sin representation
-        new_observation = observation._replace(theta_sin=pred.theta_sin, theta_cos=pred.theta_cos)
+        new_observation = observation._replace(
+            theta_sin=pred.theta_sin, theta_cos=pred.theta_cos
+        )
 
         # calculate reward based on prediction
         new_reward = self.nn_reward_fn(observation, reward, info)
@@ -217,7 +223,7 @@ def load_discrete_usuc(size: int = None, test_size=0.25):
     env = usuc.USUCDiscreteEnv(
         num_actions=config["num_actions"],
         noise_offset=config["noise_offset"],
-        noisy_circular_sector=config["noisy_circular_sector"]
+        noisy_circular_sector=config["noisy_circular_sector"],
     )
 
     # fit data / create inputs & outputs
@@ -236,7 +242,9 @@ def load_discrete_usuc(size: int = None, test_size=0.25):
         y.append([obs.theta_sin, obs.theta_cos])
 
     # split data
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=42, shuffle=False)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=test_size, random_state=42, shuffle=False
+    )
 
     # convert data to tensors
     x_train, y_train = torch.tensor(x_train).float(), torch.tensor(y_train).float()
@@ -275,7 +283,7 @@ def generate_model(x_train, y_train):
 
     optimizer = optim.Adam(regressor.parameters(), lr=0.01)
     criterion = torch.nn.MSELoss()
-    complexity_cost_weight = 1. / x_train.shape[0]
+    complexity_cost_weight = 1.0 / x_train.shape[0]
 
     losses = []
     for epoch in tqdm(range(100)):
@@ -288,7 +296,7 @@ def generate_model(x_train, y_train):
                 labels=labels,
                 criterion=criterion,
                 sample_nbr=3,
-                complexity_cost_weight=complexity_cost_weight
+                complexity_cost_weight=complexity_cost_weight,
             )
 
             loss.backward()
@@ -315,6 +323,6 @@ def load(filepath):
     return torch.load(filepath)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     x_train, y_train, y_test, y_test = load_discrete_usuc(size=5000)
     generate_model(x_train, y_train)
