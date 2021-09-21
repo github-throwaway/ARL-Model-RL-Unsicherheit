@@ -54,7 +54,7 @@ class NeuralNet:
         """
 
         # transform recent history and current action to valid input for nn
-        time_series = transform(history, action)
+        transform(history, action)
 
         # make prediction
         x = transform(history, action)
@@ -199,7 +199,7 @@ def samples(model, x, samples=100):
     :param samples: Number of samples used for prediction
     :return: List of outputs (corresponding to inputs)
     """
-    preds = [model(x) for i in range(samples)]
+    preds = [model(x) for _ in range(samples)]
     preds = torch.stack(preds)
     means = preds.mean(axis=0)
     stds = preds.std(axis=0)

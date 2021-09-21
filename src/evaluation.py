@@ -295,7 +295,7 @@ def plot_test(
 
 # TODO
 def evaluate_regression(regressor, x, y, samples=25, std_multiplier=2, render=False):
-    preds = [regressor(x) for i in range(samples)]
+    preds = [regressor(x) for _ in range(samples)]
     preds = torch.stack(preds)
     means = preds.mean(axis=0)
     stds = preds.std(axis=0)

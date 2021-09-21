@@ -91,7 +91,7 @@ def run(agent, env, runs):
 
         history = []
 
-        for i in tqdm(range(1000)):
+        for _ in tqdm(range(1000)):
             action, _states = agent.predict(obs)
             obs, reward, done, info = env.step(action)
             history.append((obs, reward, done, info))
