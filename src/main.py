@@ -12,7 +12,7 @@ import reward_functions as rf
 import usuc
 import utils
 
-from cli import run_cli_cmnds
+from cli import run_cli_commands
 
 
 def test():
@@ -52,4 +52,4 @@ def main():
 if __name__ == "__main__":
     # test()
     # main()
-    run_cli_cmnds()
+    run_cli_commands()
