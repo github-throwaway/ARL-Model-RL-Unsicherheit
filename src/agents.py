@@ -4,19 +4,40 @@ from tqdm import tqdm
 
 
 class PBarCallback(callbacks.BaseCallback):
+    """
+    A custom callback that derives from ``BaseCallback``.
+    This callback implement a progressbar via tqdm.
+
+    :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
+    """
+
     def __init__(self, verbose=0):
         super(PBarCallback, self).__init__(verbose)
         self.pbar = None
 
     def _on_training_start(self):
+        """
+        This method is called before the first rollout starts.
+        """
         self.pbar = tqdm(total=self.locals["total_timesteps"])
 
     def _on_step(self):
+        """
+        This method will be called by the model after each call to `env.step()`.
+
+        For child callback (of an `EventCallback`), this will be called
+        when the event is triggered.
+
+        :return: (bool) If the callback returns False, training is aborted early.
+        """
         self.pbar.n = self.n_calls
         self.pbar.update(0)
         return True
 
     def _on_training_end(self):
+        """
+        This event is triggered before exiting the `learn()` method.
+        """
         self.pbar.n = self.n_calls
         self.pbar.update(0)
         self.pbar.close()
@@ -35,6 +56,7 @@ def save(agent, filepath) -> None:
 def load(agent: str, filepath):
     """
     Loads a saved agent
+
     :param agent: The algorithm used to train the agent
     :param filepath: The path where the agent is stored
     :return: The loaded agent
@@ -67,7 +89,7 @@ def train(agent, total_timesteps) -> None:
     Trains the agent
 
     :param agent: Stable_baselines3 agent
-    :param total_timesteps: Number of timesteps the agent is trained
+    :param total_timesteps: Number of time steps the agent is trained
     """
 
     cb = callbacks.CallbackList([PBarCallback(total_timesteps)])
@@ -81,7 +103,7 @@ def run(agent, env, runs):
 
     :param agent: Stable_baselines3 agent
     :param env: Instantiated env
-    :param runs: Nunber of runs with the agent on the env
+    :param runs: Number of runs with the agent on the env
     :return: History for each run
     """
     histories = []
