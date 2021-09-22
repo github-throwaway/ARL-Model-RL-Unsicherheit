@@ -2,7 +2,7 @@ import math
 import os
 from pathlib import Path
 
-root_path = Path(__file__).absolute().parent
+root_path = Path(__file__).absolute().parent.parent
 os.environ["MPLCONFIGDIR"] = f"{root_path}/plots/"
 
 import dill
