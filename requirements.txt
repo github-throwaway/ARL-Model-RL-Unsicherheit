@@ -3,7 +3,7 @@ pandas==1.2.5
 matplotlib~=3.4.3
 numpy~=1.19.5
 stable-baselines3
-git+https://github.com/angelolovatto/gym-cartpole-swingup
+gym-cartpole-swingup
 dill~=0.3.4
 tqdm~=4.62.2
 gpytorch~=1.5.1
