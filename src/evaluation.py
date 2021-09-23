@@ -157,6 +157,10 @@ def plot_angles(
         plt.savefig(tikz_filepath)
 
     if show:
+        # if run from the command line this blocks the the code execution
+        # until the windows is closed manually
+        # todo: save figure instead  or used interactive mode?
+        # https://stackoverflow.com/a/458295
         plt.show()
 
     plt.close(fig)
