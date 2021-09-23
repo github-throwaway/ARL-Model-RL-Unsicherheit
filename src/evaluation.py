@@ -115,7 +115,7 @@ def plot_reward_angle(history):
 
 
 def plot_angles(
-    history: List[tuple], model_name, filepath: str = None, show=True
+    history: List[tuple], model_name, tikz_filepath: str = None, show=True
 ) -> None:
     """
     Plots the original angles as well as the observed angle in one figure
@@ -124,7 +124,7 @@ def plot_angles(
     :param original: The original angles
     :param observed: The observed angles including noise (i.e. with
     uncertainty)
-    :param filepath: Optional filepath where figure is saved
+    :param tikz_filepath: Optional filepath where figure is saved as tikz
     """
 
     original = [
@@ -152,9 +152,9 @@ def plot_angles(
     plt.legend()
     plt.grid()
 
-    if filepath:
-        tikzplotlib.save(f"{filepath}.tex")
-        plt.savefig(filepath)
+    if tikz_filepath:
+        tikzplotlib.save(f"{tikz_filepath}.tex")
+        plt.savefig(tikz_filepath)
 
     if show:
         plt.show()
