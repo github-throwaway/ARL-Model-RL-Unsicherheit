@@ -10,7 +10,7 @@ from data import gen
 import matplotlib.pyplot as plt
 
 
-def plot_sin_cos_with_stds(history):
+def plot_sin_cos_with_stds(history, filename: str = None, create_tex=False):
     x_values = list(range(len(history)))
 
     observed_theta_sin = []
@@ -89,10 +89,15 @@ def plot_sin_cos_with_stds(history):
     y2_ax.legend(["Cos", "Mean", "Confidence"])
     y2_ax.set_title("Cos Values (Likelihood)")
 
-    plt.show()
+    if filename:
+        plt.savefig(f"../plots/sin_cos_std{filename}.png")
+        if create_tex:
+            tikzplotlib.save(f"../plots/sin_cos_std{filename}.tex")
+    else:
+        plt.show()
 
 
-def plot_reward_angle(history):
+def plot_reward_angle(history, filename: str = None, create_tex=False):
     angles = []
     rewards = []
     x_pos = []
@@ -111,11 +116,16 @@ def plot_reward_angle(history):
     plt.plot(rewards, "x", label="Rewards")
 
     plt.legend()
-    plt.show()
+    if filename:
+        plt.savefig(f"../plots/reward_angle{filename}.png")
+        if create_tex:
+            tikzplotlib.save(f"../plots/reward_angle{filename}.tex")
+    else:
+        plt.show()
 
 
 def plot_angles(
-    history: List[tuple], model_name, tikz_filepath: str = None, show=True
+    history: List[tuple], model_name, filename: str = None, show=True, create_tex=False
 ) -> None:
     """
     Plots the original angles as well as the observed angle in one figure
@@ -152,9 +162,10 @@ def plot_angles(
     plt.legend()
     plt.grid()
 
-    if tikz_filepath:
-        tikzplotlib.save(f"{tikz_filepath}.tex")
-        plt.savefig(tikz_filepath)
+    if filename:
+        plt.savefig(f"../plots/angles_{filename}.png")
+        if create_tex:
+            tikzplotlib.save(f"../plots/angles_{filename}.tex")
 
     if show:
         # if run from the command line this blocks the the code execution

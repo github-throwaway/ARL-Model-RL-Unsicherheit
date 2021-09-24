@@ -80,7 +80,7 @@ def demo_usuc_random_actions():
     env.close()
 
     # plot data
-    evaluation.plot_angles(history, "no model")
+    evaluation.plot_angles(history, "no model", filename="demo")
 
 
 def demo():

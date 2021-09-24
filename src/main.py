@@ -41,20 +41,22 @@ def main():
     model_name = "blitz5k"
     model = neural_net.load(f"../models/{model_name}.pt")
 
-    env = neural_net.USUCEnvWithNN.create(model, rf.best, "../discrete-usuc-dataset")
+    env = neural_net.USUCEnvWithNN.create(model, rf.cos, "../discrete-usuc-dataset")
 
     ppo = agents.create("ppo", env)
-    agents.train(ppo, total_timesteps=10000)
-    agents.save(ppo, "../agents/ppo")
+    agents.train(ppo, total_timesteps=25000)
+    agents.save(ppo, "../agents/ppo_25k_cos")
+    #ppo = agents.load("ppo", "../agents/ppo_300k")
 
-    input("continue?")
+    #input("continue?")
     histories = agents.run(ppo, env, 10)
 
-    evaluation.plot_angles(histories[0], model_name)
-    evaluation.plot_reward_angle(histories[0])
+    evaluation.plot_angles(histories[0], model_name, filename="25k_cos")
+    evaluation.plot_reward_angle(histories[0], filename="25k_cos")
+    evaluation.plot_sin_cos_with_stds(histories[0], filename="25k_cos")
 
 
 if __name__ == "__main__":
     # test()
-    # main()
-    run_cli_commands()
+    main()
+    # run_cli_commands()

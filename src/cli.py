@@ -66,7 +66,7 @@ def plot(reward_fn):
     env.reset(1)
     history = utils.random_actions(env)
     evaluation.plot_angles(
-        history, args.nn_model, filepath=f"plots/{args.nn_model}", show=False
+        history, args.nn_model, filename=args.nn_model, show=False
     )
     evaluation.plot_reward_angle(history)
 
@@ -84,7 +84,7 @@ def evaluate_rl_agent(env):
         with open("history_ppo.p", "wb") as f:
             dill.dump(histories, f)
         evaluation.plot_angles(
-            histories[0], args.nn_model, filepath=f"plots/{args.agent}", show=False
+            histories[0], args.nn_model, filename=args.agent, show=False
         )
     print("No model found...")
     exit(0)
@@ -109,7 +109,7 @@ def train_rl_agent(env):
     with open("history_ppo.p", "wb") as f:
         dill.dump(histories, f)
     evaluation.plot_angles(
-        histories[0], args.nn_model, filepath=f"plots/{args.agent}", show=False
+        histories[0], args.nn_model, filename=args.agent, show=False
     )
 
 
