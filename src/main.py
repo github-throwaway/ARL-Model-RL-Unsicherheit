@@ -58,5 +58,5 @@ def main():
 
 if __name__ == "__main__":
     # test()
-    main()
-    # run_cli_commands()
+    # main()
+    run_cli_commands()
