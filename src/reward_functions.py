@@ -2,6 +2,7 @@ import math
 
 # TODO: comment reward functions
 
+
 def simple(predicted_observation, _, info):
     (
         x_pos,
@@ -67,9 +68,9 @@ def cos(obs, reward, info):
 
 def cos_uncert_light(obs, reward, info):
     """
-    Subtract a weakened unvertainty from cosine and use this as reward
+    Subtract a weakened uncertainty from cosine and use this as reward
     """
     std_sin = info["predicted_std_sin"]
     std_cos = info["predicted_std_cos"]
     uncertainty = math.sqrt(std_sin ** 2 + std_cos ** 2)
-    return obs.theta_cos - (uncertainty*0.1)
+    return obs.theta_cos - (uncertainty * 0.1)
