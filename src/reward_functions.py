@@ -63,3 +63,13 @@ def best(obs, reward, info):
 
 def cos(obs, reward, info):
     return obs.theta_cos
+
+
+def cos_uncert_light(obs, reward, info):
+    """
+    Subtract a weakened unvertainty from cosine and use this as reward
+    """
+    std_sin = info["predicted_std_sin"]
+    std_cos = info["predicted_std_cos"]
+    uncertainty = math.sqrt(std_sin ** 2 + std_cos ** 2)
+    return obs.theta_cos - (uncertainty*0.1)

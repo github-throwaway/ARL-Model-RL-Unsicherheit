@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.zip
+
 target/
 marioai/
 gym-cartpole-swingup/

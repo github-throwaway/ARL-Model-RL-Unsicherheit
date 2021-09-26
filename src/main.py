@@ -18,6 +18,7 @@ import usuc
 import utils
 
 from cli import run_cli_commands
+from gym import wrappers
 
 
 def test():
@@ -41,19 +42,21 @@ def main():
     model_name = "blitz5k"
     model = neural_net.load(f"../models/{model_name}.pt")
 
-    env = neural_net.USUCEnvWithNN.create(model, rf.cos, "../discrete-usuc-dataset")
+    env = neural_net.USUCEnvWithNN.create(model, rf.cos_uncert_light, "../discrete-usuc-dataset")
 
     ppo = agents.create("ppo", env)
-    agents.train(ppo, total_timesteps=25000)
-    agents.save(ppo, "../agents/ppo_25k_cos")
-    #ppo = agents.load("ppo", "../agents/ppo_300k")
-
+    agent_name = "ppo_75k_cos_uncert"
+    #agents.train(ppo, total_timesteps=75000)
+    #agents.save(ppo, f"../agents/{agent_name}")
+    ppo = agents.load("ppo", f"../agents/{agent_name}.zip")
+    # env = wrappers.Monitor(env, f'plot/{model_name}', force=True)
     #input("continue?")
     histories = agents.run(ppo, env, 10)
+    env.close()
 
-    evaluation.plot_angles(histories[0], model_name, filename="25k_cos")
-    evaluation.plot_reward_angle(histories[0], filename="25k_cos")
-    evaluation.plot_sin_cos_with_stds(histories[0], filename="25k_cos")
+    evaluation.plot_angles(histories[0], model_name, filename=agent_name)
+    evaluation.plot_reward_angle(histories[0], filename=agent_name)
+    evaluation.plot_sin_cos_with_stds(histories[0], filename=agent_name, create_tex=True)
 
 
 if __name__ == "__main__":
