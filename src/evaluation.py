@@ -90,9 +90,9 @@ def plot_sin_cos_with_stds(history, filename: str = None, create_tex=False):
     y2_ax.set_title("Cos Values (Likelihood)")
 
     if filename:
-        plt.savefig(f"../plots/sin_cos_std{filename}.png")
+        plt.savefig(f"../plots/sin_cos_std_{filename}.png")
         if create_tex:
-            tikzplotlib.save(f"../plots/sin_cos_std{filename}.tex")
+            tikzplotlib.save(f"../plots/sin_cos_std_{filename}.tex")
     else:
         plt.show()
 
@@ -117,9 +117,24 @@ def plot_reward_angle(history, filename: str = None, create_tex=False):
 
     plt.legend()
     if filename:
-        plt.savefig(f"../plots/reward_angle{filename}.png")
+        plt.savefig(f"../plots/reward_angle_{filename}.png")
         if create_tex:
-            tikzplotlib.save(f"../plots/reward_angle{filename}.tex")
+            tikzplotlib.save(f"../plots/reward_angle_{filename}.tex")
+    else:
+        plt.show()
+
+
+def plot_uncertainty(history, filename: str = None, create_tex=False):
+    std = [(info["predicted_std_sin"], info["predicted_std_cos"]) for obs, reward, done, info in history]
+    uncertainty = [math.sqrt(std_sin ** 2 + std_cos ** 2) for std_sin, std_cos in std]
+
+    plt.plot(uncertainty, "x", label="Uncertainty")
+
+    plt.legend()
+    if filename:
+        plt.savefig(f"../plots/reward_angle_{filename}.png")
+        if create_tex:
+            tikzplotlib.save(f"../plots/reward_angle_{filename}.tex")
     else:
         plt.show()
 
