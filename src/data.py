@@ -67,7 +67,7 @@ def _gen_time_sequences(
 
 
 def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
-    """ "
+    """
     Generates USUC dataset
 
     :param env: USUCEnv instance
