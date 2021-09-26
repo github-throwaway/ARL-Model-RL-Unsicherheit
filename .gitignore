@@ -10,6 +10,7 @@ gym-cartpole-swingup/
 *.png
 *.tex
 *.p
+*.zip
 
 # C extensions
 *.so
