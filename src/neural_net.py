@@ -53,9 +53,6 @@ class NeuralNet:
         :return: predicted angle, predicted std
         """
 
-        # transform recent history and current action to valid input for nn
-        transform(history, action)
-
         # make prediction
         x = transform(history, action)
         x = torch.tensor(x).float()

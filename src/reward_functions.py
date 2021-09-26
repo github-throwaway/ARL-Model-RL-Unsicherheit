@@ -1,5 +1,6 @@
 import math
 
+# TODO: comment reward functions
 
 def simple(predicted_observation, _, info):
     (
