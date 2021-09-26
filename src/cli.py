@@ -143,6 +143,8 @@ def reward_function() -> Callable:
         reward_fn = rf.best
     elif args.reward == "cos":
         reward_fn = rf.cos
+    elif args.reward == "cos_uncert":
+        reward_fn = rf.cos_uncert_light
     else:
         reward_fn = rf.simple
     return reward_fn

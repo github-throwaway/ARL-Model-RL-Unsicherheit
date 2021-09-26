@@ -76,15 +76,15 @@ def collect_arguments():
     )
     parser.add_argument(
         "--agent",
-        default="default",
+        default="75k_cos_uncert",
         type=str,
         help="Define the name of the agent you want to save/load.",
     )
     parser.add_argument(
         "--reward",
-        default="best",
+        default="cos_uncert",
         type=str,
-        help="Define twhich reward-function should be used. simple | cos | best",
+        help="Define twhich reward-function should be used. simple | cos | cos_uncert | best",
     )
 
     # program arguments
