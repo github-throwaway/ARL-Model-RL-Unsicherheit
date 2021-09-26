@@ -1,6 +1,10 @@
-# ARL-Model-RL-Unsicherheit
+# UNCERT: Semi-Model-Based RL with Uncertainty
 
->This project was developed by Sophia Sigethy, Georg Staber, Simon Lund, and Malte Wilhelm for the [Applied Reinforcement Learning SS 21](https://www.dbs.ifi.lmu.de/cms/studium_lehre/lehre_master/parl21/index.html) course at LMU.
+>This project was developed by Simon Lund, Sophia Sigethy, Georg Staber, and Malte Wilhelm for the [Applied Reinforcement Learning SS 21](https://www.dbs.ifi.lmu.de/cms/studium_lehre/lehre_master/parl21/index.html) course at LMU.
+
+
+![](./docs/cartpole.png)
+
 
 ## :ledger: Index
 
@@ -12,22 +16,25 @@
 - [Sources](#books-sources)
 
 ## :gear: Installation
-```
+```bash
 git clone https://github.com/github-throwaway/ARL-Model-RL-Unsicherheit.git
 cd ARL-Model-RL-Unsicherheit/
-pip install -r requirements.txt
+pip install -r requirements.txt # or python setup.py install
 ```
 
 ## How to run
 ### :slightly_smiling_face: Simple
-Uses preconfigured system with trained model and agent with[ default configuration](#hammer_and_wrench-configuration).
-Simply run `main.py::main` to execute. 
+Uses preconfigured system with trained model and agent with [default configuration](#hammer_and_wrench-configuration). 
+```bash
+cd src/
+python main.py
+```
 
 ### :trophy: Advanced
-You can also generate your own dataset and train your model with different datasets. Please read code.
+For the sake of usability, we implemented an argument parser. By passing some predefined arguments to the python program call, it is possible to start different routines and also change hyperparameters needed by the algorithms. This enables the user to run multiple tests with different values without making alterations to the code. This is especially helpful when fine-tuning hyperparameters for reinforcement learning algorithms, like PPO. To get an overview of all the possible arguments, and how these arguments can be used, the user may call `python main.py --help`.
 
 ## :hammer_and_wrench: Configuration
-The project was evvaluated using the following parameters.
+The project was evaluated using the following parameters.
 ```
 1. Training Data Environment
 noisysector = 0 - π
