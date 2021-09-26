@@ -43,12 +43,12 @@ observation space = discrete
 action space = 10 actions
 
 2. Neural Network Settings
-Epochs = 1000
+Epochs = 100
 time steps = 4
 
 3. RL policy
-reward function = []
-RL algorithms = [PPO]
+reward function = [simple,centered,right,boundaries,best,cos]
+RL algorithms = PPO
 ```
 
 
