@@ -3,6 +3,7 @@ from typing import List
 
 import gym
 import numpy as np
+from tqdm import tqdm
 
 
 def calc_theta(sin, cos):
@@ -38,7 +39,7 @@ def random_actions(env: gym.Env, max_steps=1000) -> List[tuple]:
     """
 
     history = []
-    for _ in range(max_steps):
+    for _ in tqdm(range(max_steps)):
         env.render()
 
         # take random action
