@@ -329,6 +329,24 @@ def plot_test(
     plt.close(fig)
 
 
+def plot_general_summary(histories, nn_model, agent_name):
+    """
+    This function is used to call the four basic plotting functions,
+    needed to evaluate the model and the agent
+
+    :param histories: The histories of the run
+    :param nn_model: The name of the used nn_model
+    :param agent_name: The name of the agent to determine the target files
+    """
+    len_history = [len(h) for h in histories]
+    max_history_index = len_history.index(max(len_history))
+
+    plot_uncertainty(histories[max_history_index], filename=agent_name, create_tex=True)
+    plot_angles(histories[max_history_index], nn_model, filename=agent_name, create_tex=True)
+    plot_reward_angle(histories[max_history_index], filename=agent_name, create_tex=True)
+    plot_sin_cos_with_stds(histories[max_history_index], filename=agent_name, create_tex=True)
+
+
 # TODO
 def evaluate_regression(regressor, x, y, samples=25, std_multiplier=2, render=False):
     preds = [regressor(x) for _ in range(samples)]

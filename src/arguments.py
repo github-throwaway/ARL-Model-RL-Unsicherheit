@@ -23,7 +23,7 @@ def collect_arguments():
         "--mode",
         default="demo",
         type=str,
-        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | test | eval | plot | demo",
+        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | eval | demo",
     )
 
     parser.add_argument(

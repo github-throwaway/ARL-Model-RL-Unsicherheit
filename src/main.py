@@ -41,10 +41,10 @@ def main():
     model_name = "blitz5k"
     model = neural_net.load(f"../models/{model_name}.pt")
 
-    env = neural_net.USUCEnvWithNN.create(model, rf.cos, "../discrete-usuc-dataset")
+    env = neural_net.USUCEnvWithNN.create(model, rf.cos_uncert_light, "../discrete-usuc-dataset")
 
     ppo = agents.create("ppo", env)
-    agent_name = "ppo_75k_cos"
+    agent_name = "ppo_75k_cos_uncert"
     #agents.train(ppo, total_timesteps=75000)
     #agents.save(ppo, f"../agents/{agent_name}")
     ppo = agents.load("ppo", f"../agents/{agent_name}.zip")
@@ -52,13 +52,7 @@ def main():
     histories = agents.run(ppo, env, 10)
     env.close()
 
-    len_history = [len(h) for h in histories]
-    max_history_index = len_history.index(max(len_history))
-
-    evaluation.plot_uncertainty(histories[max_history_index], filename=agent_name, create_tex=True)
-    evaluation.plot_angles(histories[max_history_index], model_name, filename=agent_name, create_tex=True)
-    evaluation.plot_reward_angle(histories[max_history_index], filename=agent_name, create_tex=True)
-    evaluation.plot_sin_cos_with_stds(histories[max_history_index], filename=agent_name, create_tex=True)
+    evaluation.plot_general_summary(histories, model_name, agent_name)
 
 
 if __name__ == "__main__":
