@@ -23,7 +23,14 @@ def collect_arguments():
         "--mode",
         default="demo",
         type=str,
-        help="Select a mode and start the corresponding routine:\ngen_data | train_env | train_rl | eval | demo",
+        help="Select a mode and start the corresponding routine:"
+             "\n'gen_data': Generate a Dataset"
+             "\n\t(Optional Arguments: --num_actions, --noise_offset, --data_dir, --runs, --time_steps)"
+             "\n'train_rl': Train a RL agent on a given environment"
+             "\n\t(Optional Arguments: --nn_model, --reward, --algorithm, --agent, --train_steps)"
+             "\n'eval': Evaluate a trained RL-Agent on a given environment"
+             "\n\t(Optional Arguments: --nn_model, --reward, --algorithm, --agent)"
+             "\n'demo': Watch a demonstration of the Project",
     )
 
     parser.add_argument(

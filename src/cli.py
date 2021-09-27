@@ -43,8 +43,6 @@ def choose_mode(env: usuc.USUCEnv, reward_fn: Callable):
             runs=args.runs,
             time_steps=args.time_steps,
         )
-    elif args.mode == "train_env":
-        data.load(args.data_dir)
     elif args.mode == "train_rl":
         train_rl_agent(env)
     elif args.mode == "eval":
