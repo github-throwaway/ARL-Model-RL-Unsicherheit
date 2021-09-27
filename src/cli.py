@@ -112,7 +112,7 @@ def load_environment(reward_fn: Callable) -> usuc.USUCEnv:
     elif args.env_name == "USUCEnvWithNN-v0":
         model = neural_net.load(f"../models/{args.nn_model}.pt")
         env = neural_net.USUCEnvWithNN.create(
-            reward_fn, model, "../discrete-usuc-dataset"
+            model, reward_fn, "../discrete-usuc-dataset"
         )
     return env
 
