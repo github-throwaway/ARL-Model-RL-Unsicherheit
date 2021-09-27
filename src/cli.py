@@ -77,8 +77,13 @@ def train_rl_agent(env):
     """
     agent_name = args.algorithm + "_" + args.agent
     if os.path.isfile(f"../agents/{agent_name}.zip"):
-        print("Loading model...")
-        rl_alg = agents.load(args.algorithm, f"../agents/{agent_name}")
+        if not args.overwrite_agent:
+            print(f"An agent with the name '{args.agent}' already exists."
+                  "\nPlease use another name for --agent or use '--overwrite_agent True'")
+            exit(0)
+        else:
+            print("Loading model...")
+            rl_alg = agents.load(args.algorithm, f"../agents/{agent_name}")
     else:
         print("Creating model...")
         rl_alg = agents.create(args.algorithm, env)

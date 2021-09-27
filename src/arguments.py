@@ -123,5 +123,11 @@ def collect_arguments():
         type=int,
         help="The learning rate for the chosen algorithm",
     )
+    parser.add_argument(
+        "--overwrite_agent",
+        default=False,
+        type=str2bool,
+        help="Define if an agent can be overwritten",
+    )
 
     return parser.parse_args()
