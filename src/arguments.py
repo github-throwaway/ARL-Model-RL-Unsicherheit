@@ -89,9 +89,9 @@ def collect_arguments():
     )
     parser.add_argument(
         "--reward",
-        default="cos_uncert",
+        default="cos_uncert_light",
         type=str,
-        help="Define twhich reward-function should be used. simple | cos | cos_uncert | best",
+        help="Define which reward-function should be used. simple | cos | cos_uncert_light | best",
     )
 
     # program arguments
