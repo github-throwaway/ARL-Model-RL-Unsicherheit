@@ -3,17 +3,21 @@
 >This project was developed by Simon Lund, Sophia Sigethy, Georg Staber, and Malte Wilhelm for the [Applied Reinforcement Learning SS 21](https://www.dbs.ifi.lmu.de/cms/studium_lehre/lehre_master/parl21/index.html) course at LMU.
 
 
-![](./docs/cartpole.png)
+![](docs/cartpole.svg)
 
 
 ## :ledger: Index
 
+- [Deliverables](#memo-deliverables)
 - [Installation](#gear-installation)
 - [How to run](#how-to-run)
   - [Simple](#slightly_smiling_face-simple)
   - [Advanced](#trophy-advanced)
 - [Configuration](#hammer_and_wrench-configuration)
 - [Sources](#books-sources)
+
+## :memo: Deliverables
+As part of the course we created an extensive [report](docs/21_SS_arl_uncertainty_report.pdf) as well as a final [presentation](docs/21_SS_arl_uncertainty_presentation.pdf) of the project.
 
 ## :gear: Installation
 ```bash
