@@ -128,8 +128,6 @@ def reward_function() -> Callable:
         reward_fn = rf.xpos_theta_uncert
     elif args.reward == "cos":
         reward_fn = rf.cos
-    elif args.reward == "best":
-        reward_fn = rf.best
     else:
-        reward_fn = rf.simple
+        reward_fn = rf.best
     return reward_fn
