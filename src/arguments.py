@@ -91,7 +91,7 @@ def collect_arguments():
         "--reward",
         default="cos_uncert_light",
         type=str,
-        help="Define which reward-function should be used. simple | cos | cos_uncert_light | best",
+        help="Define which reward-function should be used. xpos_theta_uncert | cos | best",
     )
 
     # program arguments
