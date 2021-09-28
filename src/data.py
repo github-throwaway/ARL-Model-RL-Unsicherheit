@@ -66,7 +66,7 @@ def _gen_time_sequences(
     return windows
 
 
-def gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
+def _gen(env: usuc.USUCEnv, runs, time_steps, data_dir) -> None:
     """
     Generates USUC dataset
 
@@ -150,27 +150,8 @@ def generate_dataset(
         num_actions, noisy_circular_sector, noise_offset, render=False
     )
 
-    gen(env, runs, time_steps, data_dir)
+    _gen(env, runs, time_steps, data_dir)
 
 
 if __name__ == "__main__":
-    # env config
-    num_actions = 10
-    noise_offset = 0.3
-    noisy_circular_sector = (0, math.pi)
-
-    # generator config
-    data_dir = "../discrete-usuc-dataset"
-    runs = 900
-    time_steps = 4
-
-    # creating empty dir (overwrites dir if it already exists)
-    shutil.rmtree(data_dir, ignore_errors=True)
-    os.makedirs(data_dir)
-
-    # run generator
-    env = usuc.USUCDiscreteEnv(
-        num_actions, noisy_circular_sector, noise_offset, render=False
-    )
-
-    gen(env, runs, time_steps, data_dir)
+    generate_dataset()
