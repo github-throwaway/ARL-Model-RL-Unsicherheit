@@ -79,9 +79,6 @@ def demo_usuc_random_actions():
     history = utils.random_actions(env)
     env.close()
 
-    # plot data
-    evaluation.plot_angles(history, filepath="../plots/demo")
-
 
 def demo():
     demo_usuc_pole_rotation()
