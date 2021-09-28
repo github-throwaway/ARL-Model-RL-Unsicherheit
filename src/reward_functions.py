@@ -1,22 +1,5 @@
 import math
 
-# TODO: comment reward functions
-
-
-def simple(predicted_observation, _, info):
-    (
-        x_pos,
-        x_dot,
-        predicted_theta_sin,
-        predicted_theta_cos,
-        theta_dot,
-    ) = predicted_observation
-
-    uncertainty = info["predicted_std"]
-    reward = 3 - ((1 - predicted_theta_cos - abs(x_pos * 0.1)) * (1 - uncertainty))
-
-    return reward
-
 
 def centered(obs, reward, info):
     """
