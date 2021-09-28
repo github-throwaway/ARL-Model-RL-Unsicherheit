@@ -78,8 +78,10 @@ def train_rl_agent(env):
     agent_name = args.algorithm + "_" + args.agent
     if os.path.isfile(f"../agents/{agent_name}.zip"):
         if not args.overwrite_agent:
-            print(f"An agent with the name '{args.agent}' already exists."
-                  "\nPlease use another name for --agent or use '--overwrite_agent True'")
+            print(
+                f"An agent with the name '{args.agent}' already exists."
+                "\nPlease use another name for --agent or use '--overwrite_agent True'"
+            )
             exit(0)
         else:
             print("Loading model...")
@@ -122,12 +124,12 @@ def reward_function() -> Callable:
     Choose reward function.
     :return: reward function
     """
-    if args.reward == "best":
-        reward_fn = rf.best
+    if args.reward == "xpos_theta_uncert":
+        reward_fn = rf.xpos_theta_uncert
     elif args.reward == "cos":
         reward_fn = rf.cos
-    elif args.reward == "cos_uncert_light":
-        reward_fn = rf.cos_uncert_light
+    elif args.reward == "best":
+        reward_fn = rf.best
     else:
         reward_fn = rf.simple
     return reward_fn

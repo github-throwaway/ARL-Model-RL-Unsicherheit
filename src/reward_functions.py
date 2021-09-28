@@ -44,7 +44,7 @@ def boundaries(obs, reward, info):
         return 1
 
 
-def best(obs, reward, info):
+def xpos_theta_uncert(obs, reward, info):
     x_pos = obs.x_pos
 
     x_pos_rew = (max(abs(x_pos) - 1, 0)) ** 2
@@ -66,7 +66,7 @@ def cos(obs, reward, info):
     return obs.theta_cos
 
 
-def cos_uncert_light(obs, reward, info):
+def best(obs, reward, info):
     """
     Subtract a weakened uncertainty from cosine and use this as reward
     """
