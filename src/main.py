@@ -41,14 +41,14 @@ def main():
     model_name = "blitz5k"
     model = neural_net.load(f"../models/{model_name}.pt")
 
-    env = neural_net.USUCEnvWithNN.create(model, rf.cos_uncert_light, "../discrete-usuc-dataset")
+    env = neural_net.USUCEnvWithNN.create(model, rf.best, "../discrete-usuc-dataset")
 
     ppo = agents.create("ppo", env)
     agent_name = "ppo_75k_cos_uncert"
-    #agents.train(ppo, total_timesteps=75000)
-    #agents.save(ppo, f"../agents/{agent_name}")
+    # agents.train(ppo, total_timesteps=75000)
+    # agents.save(ppo, f"../agents/{agent_name}")
     ppo = agents.load("ppo", f"../agents/{agent_name}.zip")
-    #input("continue?")
+    # input("continue?")
     histories = agents.run(ppo, env, 10)
     env.close()
 
