@@ -175,7 +175,7 @@ def plot_angles(history: List[tuple], filepath: str = None, create_tex=False):
 
     fig, (sp1, sp2) = plt.subplots(2, 1, figsize=(19, 12))
 
-    plt.title(f"Angle Progression")
+    plt.title("Angle Progression")
     plt.xlabel("Time")
     plt.ylabel("Pole Angle")
 
