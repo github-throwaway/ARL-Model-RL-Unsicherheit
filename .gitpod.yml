@@ -2,4 +2,7 @@ tasks:
   - init: pip3 install -r requirements.txt
     command: |
       cd src/
-      python3 main.py
+      xvfb-run -s "-screen 0 1400x900x24" python3 main.py
+
+image:
+  file: .gitpod.Dockerfile
