@@ -1,5 +1,6 @@
 FROM gitpod/workspace-full-vnc
 
-RUN sudo apt update
-RUN sudo apt install xvfb
-RUn sudo apt-get -y install python-opengl
+# Install dependencies
+RUN sudo apt-get -q update && \
+    sudo apt-get install -yq python-opengl ffmpeg && \
+    sudo rm -rf /var/lib/apt/lists/*

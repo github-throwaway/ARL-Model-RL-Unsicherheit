@@ -1,8 +1,14 @@
-tasks:
-  - init: pip3 install -r requirements.txt
-    command: |
-      cd src/
-      xvfb-run -s "-screen 0 1400x900x24" python3 main.py
-
 image:
   file: .gitpod.Dockerfile
+ports:
+  - port: 3000
+    onOpen: open-preview
+  - port: 6080
+    onOpen: ignore
+tasks:
+  - init: pip3 install -r requirements.txt
+    command: >
+      python3 src/main.py 
+vscode:
+  extensions:
+    - ms-python.python
