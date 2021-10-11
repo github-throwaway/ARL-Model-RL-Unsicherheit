@@ -31,6 +31,14 @@ https://user-images.githubusercontent.com/25488086/135059119-d990ded4-2e32-4744-
 
 
 ## :gear: Installation
+
+Start a development environment in your browser by clicking the button below. 
+
+### Local Installtion
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/.../...)
+
+
 ```bash
 git clone https://github.com/github-throwaway/ARL-Model-RL-Unsicherheit.git
 cd ARL-Model-RL-Unsicherheit/
