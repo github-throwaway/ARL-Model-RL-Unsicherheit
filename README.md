@@ -14,6 +14,7 @@
 - [Deliverables](#memo-deliverables)
   - [Videos](#video_camera-videos)
 - [Installation](#gear-installation)
+  - [Local Installation](#local-installation)
 - [How to run](#how-to-run)
   - [Simple](#slightly_smiling_face-simple)
   - [Advanced](#trophy-advanced)
@@ -34,13 +35,12 @@ https://user-images.githubusercontent.com/25488086/135059119-d990ded4-2e32-4744-
 
 
 ## :gear: Installation
-
-Start a development environment in your browser by clicking the button below. 
-
-### Local Installtion
-
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/github-throwaway/ARL-Model-RL-Unsicherheit)
 
+Start a development environment in your browser by clicking the button above. This gets you going quickly, but does not include a graphical output from the gym enironment.
+
+
+### Local Installation
 
 ```bash
 git clone https://github.com/github-throwaway/ARL-Model-RL-Unsicherheit.git
@@ -61,21 +61,17 @@ For the sake of usability, we implemented an argument parser. By passing some pr
 
 ## :hammer_and_wrench: Configuration
 The project was evaluated using the following parameters.
-```
-1. Training Data Environment
-noisysector = 0 - π
-noise offset = 0.5
-observation space = discrete
-action space = 10 actions
 
-2. Neural Network Settings
-Epochs = 100
-time steps = 4
-
-3. RL policy
-reward function = [simple,centered,right,boundaries,best,cos,xpos_theta_uncert]
-RL algorithms = PPO
-```
+| Parameter          | Value                                                                   |
+|--------------------|-------------------------------------------------------------------------|
+| noisy sector       | 0 - π (left half of unit circle)                                        |
+| noise offset       | 0.3                                                                     |
+| observation space  | continuous, 5 dimensional (xpos, xdot, theta dot, theta sin, theta xos) |
+| action space       | discrete, 10 actions                                                    |
+| NN epochs          | 100                                                                     |
+| time series length | 4                                                                       |
+| reward function    | [centered, right, boundaries, best, cos, xpos_theta_uncert]                                                                        |
+| RL algorithms      | PPO                                                                     |
 
 
 
