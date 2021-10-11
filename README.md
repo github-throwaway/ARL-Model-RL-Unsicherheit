@@ -36,7 +36,7 @@ Start a development environment in your browser by clicking the button below.
 
 ### Local Installtion
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/.../...)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://github.com/github-throwaway/ARL-Model-RL-Unsicherheit)
 
 
 ```bash
